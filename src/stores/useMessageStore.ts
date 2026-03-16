@@ -1,5 +1,5 @@
 import { create } from 'zustand';
 
-interface MessageState {}
+type MessageState = {};
 
 export const useMessageStore = create<MessageState>()(() => ({}));
