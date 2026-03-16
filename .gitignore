@@ -1,0 +1,7 @@
+.github
+.claude
+node_modules
+
+.env*
+/dist
+/coverage
