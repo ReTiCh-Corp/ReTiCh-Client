@@ -37,6 +37,11 @@
       "arrowParentheses": "always"
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "files": {
     "includes": ["src/**/*.{ts,tsx,js,jsx,css,json}", "*.json"]
   }

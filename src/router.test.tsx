@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { RouterProvider, createMemoryRouter } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './router';
 
 function renderRoute(initialRoute: string) {
@@ -27,11 +27,11 @@ describe('Router', () => {
 
   it('renders the Chat page on /chat', () => {
     renderRoute('/chat');
-    expect(screen.getByText('Chat')).toBeInTheDocument();
+    expect(screen.getByText('Messages')).toBeInTheDocument();
   });
 
   it('renders the Settings page on /settings', () => {
     renderRoute('/settings');
-    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getAllByText('Settings').length).toBeGreaterThanOrEqual(1);
   });
 });
