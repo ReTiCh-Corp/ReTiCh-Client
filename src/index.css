@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/*
+ * ReTiCh Theme — Radish-inspired palette
+ * Primary: dark rose/radish pink (used sparingly at 10-20%)
+ * Base: white with grey nuances
+ * Typography: Baloo 2 (display/fun) + Nunito (body/readable)
+ */
+
+@theme {
+  /* ── Radish Pink / Primary ── */
+  --color-primary-50: #fdf2f4;
+  --color-primary-100: #fce7eb;
+  --color-primary-200: #f9d0d9;
+  --color-primary-300: #f4a9ba;
+  --color-primary-400: #ed7896;
+  --color-primary-500: #e14d74;
+  --color-primary-600: #cd2d5a;
+  --color-primary-700: #ac2049;
+  --color-primary-800: #901e41;
+  --color-primary-900: #7b1d3b;
+  --color-primary-950: #440b1d;
+
+  /* ── Grey Nuances ── */
+  --color-grey-50: #fafafa;
+  --color-grey-100: #f5f5f5;
+  --color-grey-200: #e8e8e8;
+  --color-grey-300: #d4d4d4;
+  --color-grey-400: #a3a3a3;
+  --color-grey-500: #737373;
+  --color-grey-600: #525252;
+  --color-grey-700: #404040;
+  --color-grey-800: #262626;
+  --color-grey-900: #171717;
+
+  /* ── Semantic Colors ── */
+  --color-surface: #ffffff;
+  --color-surface-alt: var(--color-grey-50);
+  --color-surface-chat: var(--color-grey-100);
+  --color-border: var(--color-grey-200);
+  --color-border-light: var(--color-grey-100);
+  --color-text: var(--color-grey-900);
+  --color-text-muted: var(--color-grey-500);
+  --color-text-light: var(--color-grey-400);
+
+  /* ── Radish accent for leaves/secondary ── */
+  --color-leaf-50: #f0fdf4;
+  --color-leaf-100: #dcfce7;
+  --color-leaf-200: #bbf7d0;
+  --color-leaf-300: #86efac;
+  --color-leaf-400: #4ade80;
+  --color-leaf-500: #22c55e;
+  --color-leaf-600: #16a34a;
+
+  /* ── Typography ── */
+  --font-display: "Baloo 2", cursive;
+  --font-body: "Nunito", sans-serif;
+
+  /* ── Sizing ── */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-full: 9999px;
+}
+
+/* ── Base Styles ── */
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* ── Mobile safe area for bottom navbar ── */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Panel Transition Animations ── */
+
+/* Mobile: slide conversation list in from left */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile: slide chat area in from right */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Desktop: contact details panel slides in from right */
+@keyframes panel-slide-in {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Desktop: contact details panel slides out to right */
+@keyframes panel-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-panel-in {
+  animation: panel-slide-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-panel-out {
+  animation: panel-slide-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
