@@ -1,9 +1,9 @@
-import { createBrowserRouter } from 'react-router-dom'
-import Home from './pages/Home'
-import Register from './pages/Register'
-import Login from './pages/Login'
-import Chat from './pages/Chat'
-import Settings from './pages/Settings'
+import { createBrowserRouter } from 'react-router-dom';
+import Home from './pages/Home';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Chat from './pages/Chat';
+import Settings from './pages/Settings';
 
 export const router = createBrowserRouter([
   {
@@ -11,7 +11,7 @@ export const router = createBrowserRouter([
     element: <Home />,
   },
   {
-    path: '/register_',
+    path: '/register',
     element: <Register />,
   },
   {
@@ -26,4 +26,4 @@ export const router = createBrowserRouter([
     path: '/settings',
     element: <Settings />,
   },
-])
+]);
