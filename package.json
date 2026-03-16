@@ -12,6 +12,7 @@
     "format:check": "biome format .",
     "preview": "vite preview",
     "prepare": "husky",
+    "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
