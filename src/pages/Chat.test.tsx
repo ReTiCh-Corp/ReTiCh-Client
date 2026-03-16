@@ -41,4 +41,19 @@ describe('Chat', () => {
       expect(screen.queryByText('Details')).not.toBeInTheDocument();
     });
   });
+
+  it('goes back to conversation list on mobile when back is triggered', async () => {
+    const user = userEvent.setup();
+    render(<Chat />);
+
+    // Select a conversation to switch to chat view
+    await user.click(screen.getByText('Adriana Hawk'));
+
+    // Click the back button in ChatArea
+    const backButton = screen.getByLabelText('Back');
+    await user.click(backButton);
+
+    // The conversation list should be visible again
+    expect(screen.getByText('Messages')).toBeInTheDocument();
+  });
 });

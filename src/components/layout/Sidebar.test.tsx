@@ -43,4 +43,13 @@ describe('Sidebar', () => {
     const settingsButton = screen.getByTitle('Settings');
     expect(settingsButton.className).toContain('bg-primary-50');
   });
+
+  it('navigates to /chat when the logo button is clicked', async () => {
+    const user = userEvent.setup();
+    renderSidebar('/settings');
+
+    await user.click(screen.getByText('R'));
+    const chatButton = screen.getByTitle('Chat');
+    expect(chatButton.className).toContain('bg-primary-50');
+  });
 });

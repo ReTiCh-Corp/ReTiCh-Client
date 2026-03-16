@@ -87,6 +87,7 @@ export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
           {onBack && (
             <button
               type="button"
+              aria-label="Back"
               onClick={onBack}
               className="md:hidden w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-500 hover:text-grey-700 transition-colors cursor-pointer -ml-1"
             >
