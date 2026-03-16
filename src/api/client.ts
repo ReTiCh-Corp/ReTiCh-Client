@@ -1,7 +1,9 @@
 import { useAuthStore } from '../stores/useAuthStore';
 import { AUTH_ENDPOINTS } from './endpoints';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+function getBaseUrl(): string {
+  return import.meta.env.VITE_API_BASE_URL;
+}
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
@@ -16,7 +18,7 @@ async function refreshAccessToken(): Promise<string | null> {
     return null;
   }
 
-  const response = await fetch(`${BASE_URL}${AUTH_ENDPOINTS.REFRESH}`, {
+  const response = await fetch(`${getBaseUrl()}${AUTH_ENDPOINTS.REFRESH}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
@@ -48,7 +50,7 @@ export async function apiClient<T>(
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  let response = await fetch(`${BASE_URL}${endpoint}`, {
+  let response = await fetch(`${getBaseUrl()}${endpoint}`, {
     ...rest,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -58,7 +60,7 @@ export async function apiClient<T>(
     const newToken = await refreshAccessToken();
     if (newToken) {
       headers.Authorization = `Bearer ${newToken}`;
-      response = await fetch(`${BASE_URL}${endpoint}`, {
+      response = await fetch(`${getBaseUrl()}${endpoint}`, {
         ...rest,
         headers,
         body: body ? JSON.stringify(body) : undefined,
