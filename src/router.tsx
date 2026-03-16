@@ -1,11 +1,11 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import Chat from './pages/Chat';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
 
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
   {
     path: '/',
     element: <Home />,
@@ -26,4 +26,6 @@ export const router = createBrowserRouter([
     path: '/settings',
     element: <Settings />,
   },
-]);
+];
+
+export const router = createBrowserRouter(routes);
