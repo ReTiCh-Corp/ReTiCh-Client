@@ -6,3 +6,4 @@ dist
 .env*
 /dist
 /coverage
+--version

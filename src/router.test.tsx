@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { RouterProvider, createMemoryRouter } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './router';
 
 function renderRoute(initialRoute: string) {
@@ -17,12 +17,12 @@ describe('Router', () => {
 
   it('renders the Login page on /login', () => {
     renderRoute('/login');
-    expect(screen.getByText('Login')).toBeInTheDocument();
+    expect(screen.getByText('Welcome back!')).toBeInTheDocument();
   });
 
   it('renders the Register page on /register', () => {
     renderRoute('/register');
-    expect(screen.getByText('Register')).toBeInTheDocument();
+    expect(screen.getByText('Create an account')).toBeInTheDocument();
   });
 
   it('renders the Chat page on /chat', () => {
