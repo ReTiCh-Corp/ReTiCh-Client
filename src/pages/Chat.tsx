@@ -2,20 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import ChatArea from '../components/chat/ChatArea';
 import ContactDetails from '../components/chat/ContactDetails';
 import ConversationList from '../components/chat/ConversationList';
-
-const conversationNames: Record<string, string> = {
-  '1': 'Adriana Hawk',
-  '2': 'Samantha Smith',
-  '3': 'Jane Lee',
-  '4': 'Adam Newbrick',
-  '5': 'John Doe',
-  '6': 'Tom Hig',
-  '7': 'Johnny Len',
-  '8': 'Adrian Kolen',
-};
+import { useConversation } from '../hooks/useConversations';
 
 export default function Chat() {
-  const [selectedId, setSelectedId] = useState<string | null>('2');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(true);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
 
@@ -23,9 +13,8 @@ export default function Chat() {
   const [detailsClosing, setDetailsClosing] = useState(false);
   const closingTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  const selectedName = selectedId
-    ? (conversationNames[selectedId] ?? null)
-    : null;
+  const { data: conversationData } = useConversation(selectedId ?? '');
+  const selectedName = conversationData?.data?.name ?? null;
 
   const handleSelect = (id: string) => {
     setSelectedId(id);

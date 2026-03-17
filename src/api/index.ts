@@ -1,4 +1,15 @@
 export { ApiError, apiClient } from './client';
+export type {
+  Conversation,
+  CreateConversationInput,
+  ListConversationsParams,
+  PaginationMeta,
+} from './conversations';
+export {
+  createConversation,
+  getConversation,
+  listConversations,
+} from './conversations';
 export {
   AUTH_ENDPOINTS,
   CONVERSATION_ENDPOINTS,
