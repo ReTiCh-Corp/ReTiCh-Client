@@ -1,12 +1,33 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './router';
 
+vi.mock('./hooks/useConversations', () => ({
+  useConversations: () => ({
+    data: { data: [] },
+    isLoading: false,
+    error: null,
+  }),
+  useConversation: () => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 function renderRoute(initialRoute: string) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   const router = createMemoryRouter(routes, {
     initialEntries: [initialRoute],
   });
-  return render(<RouterProvider router={router} />);
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
 }
 
 describe('Router', () => {
