@@ -16,3 +16,5 @@ export {
   MESSAGE_ENDPOINTS,
   USER_ENDPOINTS,
 } from './endpoints';
+export type { ListUsersParams, User } from './users';
+export { listUsers } from './users';
