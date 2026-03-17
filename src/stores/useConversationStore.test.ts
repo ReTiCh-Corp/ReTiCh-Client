@@ -18,6 +18,8 @@ beforeEach(() => {
   useConversationStore.setState({
     conversations: [],
     currentConversationId: null,
+    searchTerm: '',
+    searchResults: [],
   });
 });
 
@@ -31,7 +33,9 @@ describe('useConversationStore', () => {
   it('setConversations replaces all conversations', () => {
     const conversations = [mockConversation, mockConversation2];
     useConversationStore.getState().setConversations(conversations);
-    expect(useConversationStore.getState().conversations).toEqual(conversations);
+    expect(useConversationStore.getState().conversations).toEqual(
+      conversations,
+    );
   });
 
   it('setCurrentConversation updates the current conversation id', () => {
@@ -55,14 +59,50 @@ describe('useConversationStore', () => {
   });
 
   it('removeConversation removes by id', () => {
-    useConversationStore.getState().setConversations([mockConversation, mockConversation2]);
+    useConversationStore
+      .getState()
+      .setConversations([mockConversation, mockConversation2]);
     useConversationStore.getState().removeConversation('1');
-    expect(useConversationStore.getState().conversations).toEqual([mockConversation2]);
+    expect(useConversationStore.getState().conversations).toEqual([
+      mockConversation2,
+    ]);
   });
 
   it('removeConversation does nothing if id not found', () => {
     useConversationStore.getState().setConversations([mockConversation]);
     useConversationStore.getState().removeConversation('999');
-    expect(useConversationStore.getState().conversations).toEqual([mockConversation]);
+    expect(useConversationStore.getState().conversations).toEqual([
+      mockConversation,
+    ]);
+  });
+
+  it('has empty searchTerm and searchResults initially', () => {
+    const state = useConversationStore.getState();
+    expect(state.searchTerm).toBe('');
+    expect(state.searchResults).toEqual([]);
+  });
+
+  it('setSearchTerm updates the search term', () => {
+    useConversationStore.getState().setSearchTerm('hello');
+    expect(useConversationStore.getState().searchTerm).toBe('hello');
+  });
+
+  it('setSearchResults replaces search results', () => {
+    const results = [
+      {
+        id: '1',
+        type: 'direct' as const,
+        name: 'Test',
+        description: null,
+        avatar_url: null,
+        creator_id: null,
+        is_archived: false,
+        last_message_at: null,
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
+      },
+    ];
+    useConversationStore.getState().setSearchResults(results);
+    expect(useConversationStore.getState().searchResults).toEqual(results);
   });
 });

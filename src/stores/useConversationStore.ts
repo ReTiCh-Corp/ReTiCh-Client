@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import type { Conversation } from '../api/conversations';
 
-interface Conversation {
+interface LocalConversation {
   id: string;
   name: string;
   participants: string[];
@@ -8,17 +9,23 @@ interface Conversation {
 }
 
 interface ConversationState {
-  conversations: Conversation[];
+  conversations: LocalConversation[];
   currentConversationId: string | null;
-  setConversations: (conversations: Conversation[]) => void;
+  searchTerm: string;
+  searchResults: Conversation[];
+  setConversations: (conversations: LocalConversation[]) => void;
   setCurrentConversation: (id: string | null) => void;
-  addConversation: (conversation: Conversation) => void;
+  addConversation: (conversation: LocalConversation) => void;
   removeConversation: (id: string) => void;
+  setSearchTerm: (term: string) => void;
+  setSearchResults: (results: Conversation[]) => void;
 }
 
 export const useConversationStore = create<ConversationState>()((set) => ({
   conversations: [],
   currentConversationId: null,
+  searchTerm: '',
+  searchResults: [],
   setConversations: (conversations) => set({ conversations }),
   setCurrentConversation: (id) => set({ currentConversationId: id }),
   addConversation: (conversation) =>
@@ -29,4 +36,6 @@ export const useConversationStore = create<ConversationState>()((set) => ({
     set((state) => ({
       conversations: state.conversations.filter((c) => c.id !== id),
     })),
+  setSearchTerm: (term) => set({ searchTerm: term }),
+  setSearchResults: (results) => set({ searchResults: results }),
 }));
