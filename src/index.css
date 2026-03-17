@@ -153,3 +153,61 @@ h6 {
 .animate-panel-out {
   animation: panel-slide-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
 }
+
+/* ── Modal Animations ── */
+
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-content-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-content-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+}
+
+.animate-modal-backdrop-in {
+  animation: modal-backdrop-in 0.2s ease-out both;
+}
+
+.animate-modal-backdrop-out {
+  animation: modal-backdrop-out 0.15s ease-in both;
+}
+
+.animate-modal-in {
+  animation: modal-content-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-modal-out {
+  animation: modal-content-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+}

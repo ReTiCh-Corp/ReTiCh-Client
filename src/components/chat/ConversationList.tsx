@@ -1,9 +1,10 @@
 import { Loader2, Plus, Search } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Conversation } from '../../api/conversations';
 import { useConversations } from '../../hooks/useConversations';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useConversationStore } from '../../stores/useConversationStore';
+import ConversationModalCreation from './ConversationModalCreation';
 
 function getInitials(name: string | null): string {
   if (!name) return '?';
@@ -39,6 +40,18 @@ export default function ConversationList({
   selectedId,
   onSelect,
 }: ConversationListProps) {
+  const [showModal, setShowModal] = useState(false);
+  const [modalClosing, setModalClosing] = useState(false);
+  const modalTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleCloseModal = () => {
+    setModalClosing(true);
+    modalTimeout.current = setTimeout(() => {
+      setShowModal(false);
+      setModalClosing(false);
+    }, 200);
+  };
+
   const searchTerm = useConversationStore((s) => s.searchTerm);
   const setSearchTerm = useConversationStore((s) => s.setSearchTerm);
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -52,6 +65,12 @@ export default function ConversationList({
     useConversationStore.getState().setSearchResults(data?.data ?? []);
   }, [data?.data]);
 
+  useEffect(() => {
+    return () => {
+      if (modalTimeout.current) clearTimeout(modalTimeout.current);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col h-full w-full md:w-[320px] md:min-w-[320px] border-r border-border bg-white">
       {/* Header */}
@@ -60,6 +79,7 @@ export default function ConversationList({
           <h2 className="text-xl font-display font-bold text-text">Messages</h2>
           <button
             type="button"
+            onClick={() => setShowModal(true)}
             className="w-8 h-8 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors cursor-pointer"
           >
             <Plus size={18} />
@@ -142,6 +162,13 @@ export default function ConversationList({
           </button>
         ))}
       </div>
+
+      {showModal && (
+        <ConversationModalCreation
+          onClose={handleCloseModal}
+          isClosing={modalClosing}
+        />
+      )}
     </div>
   );
 }
