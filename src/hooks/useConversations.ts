@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   type CreateConversationInput,
   createConversation,
@@ -20,6 +25,7 @@ export function useConversations(params?: ListConversationsParams) {
   return useQuery({
     queryKey: conversationKeys.list(params),
     queryFn: () => listConversations(params),
+    placeholderData: keepPreviousData,
   });
 }
 

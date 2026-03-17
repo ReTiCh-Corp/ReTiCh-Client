@@ -54,6 +54,14 @@ describe('conversationKeys', () => {
     ]);
   });
 
+  it('generates list key with search param', () => {
+    expect(conversationKeys.list({ search: 'test' })).toEqual([
+      'conversations',
+      'list',
+      { search: 'test' },
+    ]);
+  });
+
   it('generates details key', () => {
     expect(conversationKeys.details()).toEqual(['conversations', 'detail']);
   });

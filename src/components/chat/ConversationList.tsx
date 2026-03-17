@@ -1,7 +1,9 @@
 import { Loader2, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import type { Conversation } from '../../api/conversations';
 import { useConversations } from '../../hooks/useConversations';
+import { useDebounce } from '../../hooks/useDebounce';
+import { useConversationStore } from '../../stores/useConversationStore';
 
 function getInitials(name: string | null): string {
   if (!name) return '?';
@@ -37,13 +39,18 @@ export default function ConversationList({
   selectedId,
   onSelect,
 }: ConversationListProps) {
-  const [search, setSearch] = useState('');
-  const { data, isLoading, error } = useConversations();
+  const searchTerm = useConversationStore((s) => s.searchTerm);
+  const setSearchTerm = useConversationStore((s) => s.setSearchTerm);
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  const { data, isLoading, error } = useConversations(
+    debouncedSearch ? { search: debouncedSearch } : undefined,
+  );
 
   const conversations: Conversation[] = data?.data ?? [];
-  const filtered = conversations.filter((c) =>
-    (c.name ?? '').toLowerCase().includes(search.toLowerCase()),
-  );
+
+  useEffect(() => {
+    useConversationStore.getState().setSearchResults(data?.data ?? []);
+  }, [data?.data]);
 
   return (
     <div className="flex flex-col h-full w-full md:w-[320px] md:min-w-[320px] border-r border-border bg-white">
@@ -67,8 +74,8 @@ export default function ConversationList({
           <input
             type="text"
             placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
           />
         </div>
@@ -86,7 +93,7 @@ export default function ConversationList({
             Failed to load conversations
           </p>
         )}
-        {filtered.map((conv) => (
+        {conversations.map((conv) => (
           <button
             key={conv.id}
             type="button"

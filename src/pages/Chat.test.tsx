@@ -44,6 +44,10 @@ vi.mock('../hooks/useConversations', () => ({
   }),
 }));
 
+vi.mock('../hooks/useDebounce', () => ({
+  useDebounce: (value: string) => value,
+}));
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
