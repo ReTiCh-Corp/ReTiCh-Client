@@ -156,4 +156,69 @@ describe('ConversationEditModal', () => {
     expect(screen.getByText('Save').closest('button')).toBeDisabled();
     expect(mockMutateAsync).not.toHaveBeenCalled();
   });
+
+  it('sends undefined for empty description and avatar_url', async () => {
+    const user = userEvent.setup();
+    const { onClose } = renderModal({
+      conversation: {
+        ...mockConversation,
+        description: null,
+        avatar_url: null,
+      },
+    });
+
+    await user.click(screen.getByText('Save'));
+
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      id: 'conv-1',
+      input: {
+        name: 'Team Chat',
+        description: undefined,
+        avatar_url: undefined,
+      },
+    });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('can edit description and avatar URL fields', async () => {
+    const user = userEvent.setup();
+    renderModal({
+      conversation: {
+        ...mockConversation,
+        description: null,
+        avatar_url: null,
+      },
+    });
+
+    const descInput = screen.getByPlaceholderText('Add a description...');
+    await user.type(descInput, 'New desc');
+
+    const avatarInput = screen.getByPlaceholderText(
+      'https://example.com/avatar.png',
+    );
+    await user.type(avatarInput, 'https://img.com/pic.png');
+
+    await user.click(screen.getByText('Save'));
+
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      id: 'conv-1',
+      input: {
+        name: 'Team Chat',
+        description: 'New desc',
+        avatar_url: 'https://img.com/pic.png',
+      },
+    });
+  });
+
+  it('calls onClose when X button is clicked', async () => {
+    const user = userEvent.setup();
+    const { onClose } = renderModal();
+
+    const dialog = screen.getByRole('dialog');
+    const xButton = dialog.querySelector(
+      '.flex.items-center.justify-between button',
+    );
+    await user.click(xButton as HTMLButtonElement);
+    expect(onClose).toHaveBeenCalledOnce();
+  });
 });

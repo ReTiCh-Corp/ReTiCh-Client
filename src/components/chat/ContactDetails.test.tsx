@@ -38,6 +38,26 @@ vi.mock('../../hooks/useUsers', () => ({
   useUsers: vi.fn(() => ({ data: { data: [] }, isLoading: false })),
 }));
 
+vi.mock('./AddParticipantModal', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="add-participant-modal">
+      <button type="button" onClick={onClose}>
+        close-add-modal
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('./ConversationEditModal', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="edit-modal">
+      <button type="button" onClick={onClose}>
+        close-edit-modal
+      </button>
+    </div>
+  ),
+}));
+
 const { useConversation } = await import('../../hooks/useConversations');
 const mockUseConversation = vi.mocked(useConversation);
 
@@ -454,5 +474,41 @@ describe('ContactDetails', () => {
       wrapper,
     });
     expect(screen.getByText('1 member')).toBeInTheDocument();
+  });
+
+  it('opens Add Participant modal when Add button is clicked', async () => {
+    const user = userEvent.setup();
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    expect(screen.queryByTestId('add-participant-modal')).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('Add'));
+
+    expect(screen.getByTestId('add-participant-modal')).toBeInTheDocument();
+  });
+
+  it('opens Edit modal when edit button is clicked', async () => {
+    const user = userEvent.setup();
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    expect(screen.queryByTestId('edit-modal')).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Edit conversation'));
+
+    expect(screen.getByTestId('edit-modal')).toBeInTheDocument();
   });
 });
