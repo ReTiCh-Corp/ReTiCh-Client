@@ -377,4 +377,25 @@ describe('ConversationModalCreation', () => {
 
     expect(screen.getByText('Server error')).toBeInTheDocument();
   });
+
+  it('can remove a selected member via pill X button', async () => {
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(screen.getByText('Group'));
+    await user.type(screen.getByPlaceholderText('Group name...'), 'Team');
+    await user.click(screen.getByText('alice'));
+
+    // Should have pill
+    const pills = screen.getAllByText('alice');
+    expect(pills.length).toBe(2); // list + pill
+
+    // Click X on pill
+    const pill = pills[0].closest('span');
+    const xButton = pill?.querySelector('button');
+    await user.click(xButton as HTMLButtonElement);
+
+    // Should only have one alice now (in the list)
+    expect(screen.getAllByText('alice').length).toBe(1);
+  });
 });

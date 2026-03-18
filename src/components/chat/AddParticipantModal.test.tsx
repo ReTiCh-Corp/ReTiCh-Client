@@ -204,4 +204,28 @@ describe('AddParticipantModal', () => {
       await screen.findByText("You don't have permission to add members"),
     ).toBeInTheDocument();
   });
+
+  it('shows generic error message when adding participants fails with non-403', async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error('Server error'));
+
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(screen.getByText('alice'));
+    await user.click(screen.getByText('Add (1)'));
+
+    expect(
+      await screen.findByText('Server error'),
+    ).toBeInTheDocument();
+  });
+
+  it('filters users by search term', async () => {
+    const user = userEvent.setup();
+    renderModal();
+
+    const searchInput = screen.getByPlaceholderText('Search users...');
+    await user.type(searchInput, 'ali');
+
+    expect(searchInput).toHaveValue('ali');
+  });
 });

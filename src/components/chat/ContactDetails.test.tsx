@@ -448,6 +448,72 @@ describe('ContactDetails', () => {
     expect(screen.getByTestId('add-participant-modal')).toBeInTheDocument();
   });
 
+  it('shows generic error when remove participant fails with non-403', async () => {
+    mockRemoveMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    const user = userEvent.setup();
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    await user.click(screen.getByLabelText('Remove Bob'));
+
+    expect(
+      await screen.findByText('An error occurred while removing the member'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows error when leave fails with 403', async () => {
+    mockLeaveMutateAsync.mockRejectedValueOnce(
+      new ApiError(403, 'Forbidden'),
+    );
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    const user = userEvent.setup();
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    await user.click(screen.getByText('Leave conversation'));
+
+    expect(
+      await screen.findByText(
+        "You don't have permission to leave this conversation",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows generic error when leave fails with non-403', async () => {
+    mockLeaveMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    const user = userEvent.setup();
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    await user.click(screen.getByText('Leave conversation'));
+
+    expect(
+      await screen.findByText(
+        'An error occurred while leaving the conversation',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('shows error message when remove participant fails with 403', async () => {
     mockRemoveMutateAsync.mockRejectedValueOnce(
       new ApiError(403, 'Forbidden'),
