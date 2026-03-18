@@ -3,10 +3,23 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
 import {
+  addParticipants,
+  archiveConversation,
+  createConversation,
+  removeParticipant,
+  updateConversation,
+} from '../api/conversations';
+import { useAuthStore } from '../stores/useAuthStore';
+import {
   conversationKeys,
+  useAddParticipants,
+  useArchiveConversation,
   useConversation,
   useConversations,
   useCreateConversation,
+  useLeaveConversation,
+  useRemoveParticipant,
+  useUpdateConversation,
 } from './useConversations';
 
 vi.mock('../api/conversations', () => ({
@@ -17,16 +30,22 @@ vi.mock('../api/conversations', () => ({
   createConversation: vi
     .fn()
     .mockResolvedValue({ data: { id: 'new', name: 'Created' } }),
+  updateConversation: vi.fn().mockResolvedValue({ data: { id: '1' } }),
+  archiveConversation: vi.fn().mockResolvedValue(undefined),
+  addParticipants: vi.fn().mockResolvedValue({ data: [] }),
+  removeParticipant: vi.fn().mockResolvedValue(undefined),
 }));
 
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
+function createWrapper(queryClient?: QueryClient) {
+  const qc =
+    queryClient ??
+    new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
   return ({ children }: { children: ReactNode }) =>
-    createElement(QueryClientProvider, { client: queryClient }, children);
+    createElement(QueryClientProvider, { client: qc }, children);
 }
 
 describe('conversationKeys', () => {
@@ -108,11 +127,156 @@ describe('useConversation', () => {
 });
 
 describe('useCreateConversation', () => {
-  it('returns a mutation function', () => {
+  it('calls createConversation and invalidates lists', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
     const { result } = renderHook(() => useCreateConversation(), {
-      wrapper: createWrapper(),
+      wrapper: createWrapper(queryClient),
     });
 
-    expect(result.current.mutateAsync).toBeDefined();
+    await result.current.mutateAsync({ type: 'direct' });
+
+    expect(createConversation).toHaveBeenCalledWith({ type: 'direct' });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.lists(),
+    });
+  });
+});
+
+describe('useUpdateConversation', () => {
+  it('calls updateConversation and invalidates lists and detail', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useUpdateConversation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      id: 'c1',
+      input: { name: 'Updated' },
+    });
+
+    expect(updateConversation).toHaveBeenCalledWith('c1', { name: 'Updated' });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.lists(),
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.detail('c1'),
+    });
+  });
+});
+
+describe('useArchiveConversation', () => {
+  it('calls archiveConversation and invalidates lists', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useArchiveConversation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync('c1');
+
+    expect(archiveConversation).toHaveBeenCalledWith('c1');
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.lists(),
+    });
+  });
+});
+
+describe('useAddParticipants', () => {
+  it('calls addParticipants and invalidates detail', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useAddParticipants(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      conversationId: 'c1',
+      participantIds: ['u1', 'u2'],
+    });
+
+    expect(addParticipants).toHaveBeenCalledWith('c1', ['u1', 'u2']);
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.detail('c1'),
+    });
+  });
+});
+
+describe('useRemoveParticipant', () => {
+  it('calls removeParticipant and invalidates detail and lists', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useRemoveParticipant(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      conversationId: 'c1',
+      userId: 'u1',
+    });
+
+    expect(removeParticipant).toHaveBeenCalledWith('c1', 'u1');
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.detail('c1'),
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.lists(),
+    });
+  });
+});
+
+describe('useLeaveConversation', () => {
+  it('calls removeParticipant with current user id and invalidates lists', async () => {
+    useAuthStore.setState({
+      user: { id: 'me-123', email: 'me@test.com', username: 'me' },
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useLeaveConversation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync('c1');
+
+    expect(removeParticipant).toHaveBeenCalledWith('c1', 'me-123');
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.lists(),
+    });
+  });
+
+  it('throws when user is not authenticated', async () => {
+    useAuthStore.setState({ user: null });
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const { result } = renderHook(() => useLeaveConversation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await expect(result.current.mutateAsync('c1')).rejects.toThrow(
+      'User not authenticated',
+    );
   });
 });

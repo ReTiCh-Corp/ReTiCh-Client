@@ -70,6 +70,16 @@ vi.mock('../../hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
 }));
 
+vi.mock('./ConversationModalCreation', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="creation-modal">
+      <button type="button" onClick={onClose}>
+        close-modal
+      </button>
+    </div>
+  ),
+}));
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -230,5 +240,48 @@ describe('ConversationList', () => {
     });
 
     expect(mockUseConversations).toHaveBeenCalledWith(undefined);
+  });
+
+  it('opens creation modal when plus button is clicked', async () => {
+    const user = userEvent.setup();
+    render(<ConversationList selectedId={null} onSelect={onSelect} />, {
+      wrapper: createWrapper(),
+    });
+
+    expect(screen.queryByTestId('creation-modal')).not.toBeInTheDocument();
+
+    const plusButton = screen.getByRole('button', { name: '' });
+    await user.click(plusButton);
+
+    expect(screen.getByTestId('creation-modal')).toBeInTheDocument();
+  });
+
+  it('displays "Direct message" when conversation name is null', () => {
+    mockUseConversations.mockReturnValue({
+      data: {
+        data: [
+          {
+            id: '99',
+            type: 'direct',
+            name: null,
+            description: null,
+            avatar_url: null,
+            creator_id: null,
+            is_archived: false,
+            last_message_at: null,
+            created_at: '2025-01-01T00:00:00Z',
+            updated_at: '2025-01-01T00:00:00Z',
+          },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ConversationList selectedId={null} onSelect={onSelect} />, {
+      wrapper: createWrapper(),
+    });
+
+    expect(screen.getByText('Direct message')).toBeInTheDocument();
   });
 });
