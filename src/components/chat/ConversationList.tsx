@@ -1,90 +1,32 @@
-import { Plus, Search } from 'lucide-react';
+import { Loader2, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import type { Conversation } from '../../api/conversations';
+import { useConversations } from '../../hooks/useConversations';
 
-interface Conversation {
-  id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  online: boolean;
+function getInitials(name: string | null): string {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }
 
-const mockConversations: Conversation[] = [
-  {
-    id: '1',
-    name: 'Adriana Hawk',
-    avatar: 'AH',
-    lastMessage: 'In fact, this was an option for all colleagu...',
-    time: '1 min',
-    unread: 4,
-    online: true,
-  },
-  {
-    id: '2',
-    name: 'Samantha Smith',
-    avatar: 'SS',
-    lastMessage: 'Biggie Smalls – Sky is the limit.mp3',
-    time: 'Yesterday',
-    unread: 0,
-    online: true,
-  },
-  {
-    id: '3',
-    name: 'Jane Lee',
-    avatar: 'JL',
-    lastMessage: 'Nice one!',
-    time: 'Yesterday',
-    unread: 0,
-    online: false,
-  },
-  {
-    id: '4',
-    name: 'Adam Newbrick',
-    avatar: 'AN',
-    lastMessage: 'See you soon :)',
-    time: 'Yesterday',
-    unread: 0,
-    online: false,
-  },
-  {
-    id: '5',
-    name: 'John Doe',
-    avatar: 'JD',
-    lastMessage: 'Big up, and take care man :)',
-    time: '2 days ago',
-    unread: 0,
-    online: true,
-  },
-  {
-    id: '6',
-    name: 'Tom Hig',
-    avatar: 'TH',
-    lastMessage: 'Sure!',
-    time: '2 days ago',
-    unread: 0,
-    online: false,
-  },
-  {
-    id: '7',
-    name: 'Johnny Len',
-    avatar: 'JL',
-    lastMessage: 'Last time it was amazing, where did you ...',
-    time: '23/09/2019',
-    unread: 2,
-    online: false,
-  },
-  {
-    id: '8',
-    name: 'Adrian Kolen',
-    avatar: 'AK',
-    lastMessage: 'Ol times good times man. Preciate latest ...',
-    time: '23/09/2019',
-    unread: 0,
-    online: false,
-  },
-];
+function formatTime(dateStr: string | null): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString();
+}
 
 interface ConversationListProps {
   selectedId: string | null;
@@ -96,9 +38,11 @@ export default function ConversationList({
   onSelect,
 }: ConversationListProps) {
   const [search, setSearch] = useState('');
+  const { data, isLoading, error } = useConversations();
 
-  const filtered = mockConversations.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()),
+  const conversations: Conversation[] = data?.data ?? [];
+  const filtered = conversations.filter((c) =>
+    (c.name ?? '').toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -132,6 +76,16 @@ export default function ConversationList({
 
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
+        {isLoading && (
+          <div className="flex items-center justify-center py-8 text-grey-400">
+            <Loader2 size={20} className="animate-spin" />
+          </div>
+        )}
+        {error && (
+          <p className="text-sm text-red-500 text-center py-4">
+            Failed to load conversations
+          </p>
+        )}
         {filtered.map((conv) => (
           <button
             key={conv.id}
@@ -158,11 +112,8 @@ export default function ConversationList({
                 }
               `}
               >
-                {conv.avatar}
+                {getInitials(conv.name)}
               </div>
-              {conv.online && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-leaf-500 border-2 border-white" />
-              )}
             </div>
 
             {/* Content */}
@@ -171,23 +122,16 @@ export default function ConversationList({
                 <span
                   className={`text-sm font-semibold truncate ${selectedId === conv.id ? 'text-primary-900' : 'text-text'}`}
                 >
-                  {conv.name}
+                  {conv.name ?? 'Direct message'}
                 </span>
                 <span className="text-[11px] text-grey-400 shrink-0 ml-2">
-                  {conv.time}
+                  {formatTime(conv.last_message_at ?? conv.created_at)}
                 </span>
               </div>
               <p className="text-xs text-text-muted truncate">
-                {conv.lastMessage}
+                {conv.description ?? conv.type}
               </p>
             </div>
-
-            {/* Unread badge */}
-            {conv.unread > 0 && (
-              <div className="w-5 h-5 rounded-full bg-primary-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                {conv.unread}
-              </div>
-            )}
           </button>
         ))}
       </div>
