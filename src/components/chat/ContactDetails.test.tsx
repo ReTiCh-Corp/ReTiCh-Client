@@ -1,7 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ApiError } from '../../api/client';
 import ContactDetails from './ContactDetails';
+
+vi.mock('../../api/client', () => ({
+  ApiError: class ApiError extends Error {
+    status: number;
+    data?: unknown;
+    constructor(status: number, message: string, data?: unknown) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = status;
+      this.data = data;
+    }
+  },
+}));
+
+const mockRemoveMutateAsync = vi.fn().mockResolvedValue({});
 
 vi.mock('../../hooks/useConversations', () => ({
   useConversation: vi.fn(),
@@ -10,7 +26,7 @@ vi.mock('../../hooks/useConversations', () => ({
     isPending: false,
   })),
   useRemoveParticipant: vi.fn(() => ({
-    mutateAsync: vi.fn(),
+    mutateAsync: mockRemoveMutateAsync,
     isPending: false,
   })),
   useAddParticipants: vi.fn(() => ({
@@ -256,5 +272,30 @@ describe('ContactDetails', () => {
       wrapper,
     });
     expect(screen.getByText('Our team group')).toBeInTheDocument();
+  });
+
+  it('shows error message when remove participant fails with 403', async () => {
+    mockRemoveMutateAsync.mockRejectedValueOnce(
+      new ApiError(403, 'Forbidden'),
+    );
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    const user = userEvent.setup();
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    const removeButton = screen.getByLabelText('Remove Bob');
+    await user.click(removeButton);
+
+    expect(
+      await screen.findByText(
+        "You don't have permission to remove this member",
+      ),
+    ).toBeInTheDocument();
   });
 });

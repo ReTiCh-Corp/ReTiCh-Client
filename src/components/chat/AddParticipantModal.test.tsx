@@ -1,9 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ApiError } from '../../api/client';
 import AddParticipantModal from './AddParticipantModal';
 
 const mockMutateAsync = vi.fn().mockResolvedValue({});
+
+vi.mock('../../api/client', () => ({
+  ApiError: class ApiError extends Error {
+    status: number;
+    data?: unknown;
+    constructor(status: number, message: string, data?: unknown) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = status;
+      this.data = data;
+    }
+  },
+}));
 
 vi.mock('../../hooks/useConversations', () => ({
   useAddParticipants: vi.fn(() => ({
@@ -158,5 +172,22 @@ describe('AddParticipantModal', () => {
 
     await user.click(screen.getByText('bob'));
     expect(screen.getByText('Add (2)')).toBeInTheDocument();
+  });
+
+  it('shows error message when adding participants fails with 403', async () => {
+    mockMutateAsync.mockRejectedValueOnce(
+      new ApiError(403, 'Forbidden'),
+    );
+
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(screen.getByText('alice'));
+    const addButton = screen.getByText('Add (1)');
+    await user.click(addButton);
+
+    expect(
+      await screen.findByText("You don't have permission to add members"),
+    ).toBeInTheDocument();
   });
 });

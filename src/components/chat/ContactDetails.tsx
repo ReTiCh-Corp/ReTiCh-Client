@@ -1,5 +1,6 @@
 import { Image, Loader2, LogOut, UserPlus, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ApiError } from '../../api/client';
 import {
   useConversation,
   useLeaveConversation,
@@ -31,7 +32,14 @@ export default function ContactDetails({
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const modalTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (!errorMessage) return;
+    const timer = setTimeout(() => setErrorMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [errorMessage]);
 
   const { data: conversationData, isLoading } = useConversation(
     conversationId ?? '',
@@ -83,6 +91,14 @@ export default function ContactDetails({
         conversationId,
         userId,
       });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        setErrorMessage(
+          "You don't have permission to remove this member",
+        );
+      } else {
+        setErrorMessage('An error occurred while removing the member');
+      }
     } finally {
       setRemovingUserId(null);
     }
@@ -90,7 +106,17 @@ export default function ContactDetails({
 
   const handleLeave = async () => {
     if (!conversationId) return;
-    await leaveConversationMutation.mutateAsync(conversationId);
+    try {
+      await leaveConversationMutation.mutateAsync(conversationId);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        setErrorMessage(
+          "You don't have permission to leave this conversation",
+        );
+      } else {
+        setErrorMessage('An error occurred while leaving the conversation');
+      }
+    }
   };
 
   return (
@@ -209,6 +235,14 @@ export default function ContactDetails({
           ))}
         </div>
       </div>
+
+      {errorMessage && (
+        <div className="px-5 pb-3">
+          <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">
+            {errorMessage}
+          </p>
+        </div>
+      )}
 
       {/* Leave button (group/channel only) */}
       {isGroupOrChannel && (
