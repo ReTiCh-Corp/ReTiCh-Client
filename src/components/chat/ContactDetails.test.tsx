@@ -17,6 +17,10 @@ vi.mock('../../hooks/useConversations', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   })),
+  useUpdateConversation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock('../../stores/useAuthStore', () => ({
@@ -256,5 +260,50 @@ describe('ContactDetails', () => {
       wrapper,
     });
     expect(screen.getByText('Our team group')).toBeInTheDocument();
+  });
+
+  it('shows edit button for owner on group conversation', () => {
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.getByLabelText('Edit conversation')).toBeInTheDocument();
+  });
+
+  it('does not show edit button for regular member on group conversation', () => {
+    const mockGroupAsMember = {
+      data: {
+        ...mockGroupConversation.data,
+        participants: mockGroupConversation.data.participants.map((p) =>
+          p.user_id === 'current-user' ? { ...p, role: 'member' } : p,
+        ),
+      },
+    };
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupAsMember,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.queryByLabelText('Edit conversation')).not.toBeInTheDocument();
+  });
+
+  it('does not show edit button on direct conversation', () => {
+    mockUseConversation.mockReturnValue({
+      data: mockDirectConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-1" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.queryByLabelText('Edit conversation')).not.toBeInTheDocument();
   });
 });
