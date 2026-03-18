@@ -212,7 +212,7 @@ describe('ConversationModalCreation', () => {
 
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'direct',
-      member_ids: ['1'],
+      participant_ids: ['1'],
     });
     expect(onClose).toHaveBeenCalled();
   });
@@ -230,7 +230,7 @@ describe('ConversationModalCreation', () => {
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'group',
       name: 'Team Chat',
-      member_ids: ['1', '2'],
+      participant_ids: ['1', '2'],
     });
     expect(onClose).toHaveBeenCalled();
   });
@@ -247,7 +247,7 @@ describe('ConversationModalCreation', () => {
     await user.click(screen.getByText('Create'));
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'direct',
-      member_ids: ['2'],
+      participant_ids: ['2'],
     });
   });
 
@@ -265,7 +265,7 @@ describe('ConversationModalCreation', () => {
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'group',
       name: 'Team',
-      member_ids: ['1', '2', '3'],
+      participant_ids: ['1', '2', '3'],
     });
   });
 
@@ -285,7 +285,7 @@ describe('ConversationModalCreation', () => {
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'group',
       name: 'Team',
-      member_ids: ['2'],
+      participant_ids: ['2'],
     });
   });
 
