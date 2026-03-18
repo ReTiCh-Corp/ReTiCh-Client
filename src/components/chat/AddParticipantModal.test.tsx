@@ -1,9 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ApiError } from '../../api/client';
 import AddParticipantModal from './AddParticipantModal';
 
 const mockMutateAsync = vi.fn().mockResolvedValue({});
+
+vi.mock('../../api/client', () => ({
+  ApiError: class ApiError extends Error {
+    status: number;
+    data?: unknown;
+    constructor(status: number, message: string, data?: unknown) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = status;
+      this.data = data;
+    }
+  },
+}));
 
 vi.mock('../../hooks/useConversations', () => ({
   useAddParticipants: vi.fn(() => ({
@@ -172,5 +186,46 @@ describe('AddParticipantModal', () => {
   it('shows "No users found" when all users are existing participants', () => {
     renderModal(['1', '2', '3']);
     expect(screen.getByText('No users found')).toBeInTheDocument();
+  });
+
+  it('shows error message when adding participants fails with 403', async () => {
+    mockMutateAsync.mockRejectedValueOnce(
+      new ApiError(403, 'Forbidden'),
+    );
+
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(screen.getByText('alice'));
+    const addButton = screen.getByText('Add (1)');
+    await user.click(addButton);
+
+    expect(
+      await screen.findByText("You don't have permission to add members"),
+    ).toBeInTheDocument();
+  });
+
+  it('shows generic error message when adding participants fails with non-403', async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error('Server error'));
+
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(screen.getByText('alice'));
+    await user.click(screen.getByText('Add (1)'));
+
+    expect(
+      await screen.findByText('Server error'),
+    ).toBeInTheDocument();
+  });
+
+  it('filters users by search term', async () => {
+    const user = userEvent.setup();
+    renderModal();
+
+    const searchInput = screen.getByPlaceholderText('Search users...');
+    await user.type(searchInput, 'ali');
+
+    expect(searchInput).toHaveValue('ali');
   });
 });

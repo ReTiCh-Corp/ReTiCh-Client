@@ -1,9 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ApiError } from '../../api/client';
 import ContactDetails from './ContactDetails';
 
-const mockRemoveMutateAsync = vi.fn().mockResolvedValue(undefined);
+vi.mock('../../api/client', () => ({
+  ApiError: class ApiError extends Error {
+    status: number;
+    data?: unknown;
+    constructor(status: number, message: string, data?: unknown) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = status;
+      this.data = data;
+    }
+  },
+}));
+
+const mockRemoveMutateAsync = vi.fn().mockResolvedValue({});
 const mockLeaveMutateAsync = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../../hooks/useConversations', () => ({
@@ -17,10 +31,6 @@ vi.mock('../../hooks/useConversations', () => ({
     isPending: false,
   })),
   useAddParticipants: vi.fn(() => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  })),
-  useUpdateConversation: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
   })),
@@ -48,15 +58,6 @@ vi.mock('./AddParticipantModal', () => ({
   ),
 }));
 
-vi.mock('./ConversationEditModal', () => ({
-  default: ({ onClose }: { onClose: () => void }) => (
-    <div data-testid="edit-modal">
-      <button type="button" onClick={onClose}>
-        close-edit-modal
-      </button>
-    </div>
-  ),
-}));
 
 const { useConversation } = await import('../../hooks/useConversations');
 const mockUseConversation = vi.mocked(useConversation);
@@ -287,51 +288,6 @@ describe('ContactDetails', () => {
     expect(screen.getByText('Our team group')).toBeInTheDocument();
   });
 
-  it('shows edit button for owner on group conversation', () => {
-    mockUseConversation.mockReturnValue({
-      data: mockGroupConversation,
-      isLoading: false,
-    } as ReturnType<typeof useConversation>);
-
-    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
-      wrapper,
-    });
-    expect(screen.getByLabelText('Edit conversation')).toBeInTheDocument();
-  });
-
-  it('does not show edit button for regular member on group conversation', () => {
-    const mockGroupAsMember = {
-      data: {
-        ...mockGroupConversation.data,
-        participants: mockGroupConversation.data.participants.map((p) =>
-          p.user_id === 'current-user' ? { ...p, role: 'member' } : p,
-        ),
-      },
-    };
-
-    mockUseConversation.mockReturnValue({
-      data: mockGroupAsMember,
-      isLoading: false,
-    } as ReturnType<typeof useConversation>);
-
-    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
-      wrapper,
-    });
-    expect(screen.queryByLabelText('Edit conversation')).not.toBeInTheDocument();
-  });
-
-  it('does not show edit button on direct conversation', () => {
-    mockUseConversation.mockReturnValue({
-      data: mockDirectConversation,
-      isLoading: false,
-    } as ReturnType<typeof useConversation>);
-
-    render(<ContactDetails conversationId="conv-1" onClose={onClose} />, {
-      wrapper,
-    });
-    expect(screen.queryByLabelText('Edit conversation')).not.toBeInTheDocument();
-  });
-
   it('renders nothing when conversation data is undefined', () => {
     mockUseConversation.mockReturnValue({
       data: { data: undefined },
@@ -488,27 +444,98 @@ describe('ContactDetails', () => {
     });
 
     expect(screen.queryByTestId('add-participant-modal')).not.toBeInTheDocument();
-
     await user.click(screen.getByText('Add'));
-
     expect(screen.getByTestId('add-participant-modal')).toBeInTheDocument();
   });
 
-  it('opens Edit modal when edit button is clicked', async () => {
-    const user = userEvent.setup();
+  it('shows generic error when remove participant fails with non-403', async () => {
+    mockRemoveMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
     mockUseConversation.mockReturnValue({
       data: mockGroupConversation,
       isLoading: false,
     } as ReturnType<typeof useConversation>);
 
+    const user = userEvent.setup();
     render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
       wrapper,
     });
 
-    expect(screen.queryByTestId('edit-modal')).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText('Remove Bob'));
 
-    await user.click(screen.getByLabelText('Edit conversation'));
+    expect(
+      await screen.findByText('An error occurred while removing the member'),
+    ).toBeInTheDocument();
+  });
 
-    expect(screen.getByTestId('edit-modal')).toBeInTheDocument();
+  it('shows error when leave fails with 403', async () => {
+    mockLeaveMutateAsync.mockRejectedValueOnce(
+      new ApiError(403, 'Forbidden'),
+    );
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    const user = userEvent.setup();
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    await user.click(screen.getByText('Leave conversation'));
+
+    expect(
+      await screen.findByText(
+        "You don't have permission to leave this conversation",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows generic error when leave fails with non-403', async () => {
+    mockLeaveMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    const user = userEvent.setup();
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    await user.click(screen.getByText('Leave conversation'));
+
+    expect(
+      await screen.findByText(
+        'An error occurred while leaving the conversation',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows error message when remove participant fails with 403', async () => {
+    mockRemoveMutateAsync.mockRejectedValueOnce(
+      new ApiError(403, 'Forbidden'),
+    );
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    const user = userEvent.setup();
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    const removeButton = screen.getByLabelText('Remove Bob');
+    await user.click(removeButton);
+
+    expect(
+      await screen.findByText(
+        "You don't have permission to remove this member",
+      ),
+    ).toBeInTheDocument();
   });
 });

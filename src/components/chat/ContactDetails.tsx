@@ -1,5 +1,6 @@
-import { Image, Loader2, LogOut, Pencil, UserPlus, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { Image, Loader2, LogOut, UserPlus, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ApiError } from '../../api/client';
 import {
   useConversation,
   useLeaveConversation,
@@ -7,7 +8,6 @@ import {
 } from '../../hooks/useConversations';
 import { useAuthStore } from '../../stores/useAuthStore';
 import AddParticipantModal from './AddParticipantModal';
-import ConversationEditModal from './ConversationEditModal';
 import ParticipantList from './ParticipantList';
 
 interface ContactDetailsProps {
@@ -31,10 +31,15 @@ export default function ContactDetails({
 }: ContactDetailsProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editModalClosing, setEditModalClosing] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const modalTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (!errorMessage) return;
+    const timer = setTimeout(() => setErrorMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [errorMessage]);
 
   const { data: conversationData, isLoading } = useConversation(
     conversationId ?? '',
@@ -78,14 +83,6 @@ export default function ContactDetails({
     }, 200);
   };
 
-  const handleCloseEditModal = () => {
-    setEditModalClosing(true);
-    modalTimeout.current = setTimeout(() => {
-      setShowEditModal(false);
-      setEditModalClosing(false);
-    }, 200);
-  };
-
   const handleRemoveParticipant = async (userId: string) => {
     if (!conversationId) return;
     setRemovingUserId(userId);
@@ -94,6 +91,14 @@ export default function ContactDetails({
         conversationId,
         userId,
       });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        setErrorMessage(
+          "You don't have permission to remove this member",
+        );
+      } else {
+        setErrorMessage('An error occurred while removing the member');
+      }
     } finally {
       setRemovingUserId(null);
     }
@@ -101,7 +106,17 @@ export default function ContactDetails({
 
   const handleLeave = async () => {
     if (!conversationId) return;
-    await leaveConversationMutation.mutateAsync(conversationId);
+    try {
+      await leaveConversationMutation.mutateAsync(conversationId);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        setErrorMessage(
+          "You don't have permission to leave this conversation",
+        );
+      } else {
+        setErrorMessage('An error occurred while leaving the conversation');
+      }
+    }
   };
 
   return (
@@ -142,16 +157,6 @@ export default function ContactDetails({
           <span className="text-xs text-grey-400 mt-1">
             {participants.length} member{participants.length !== 1 ? 's' : ''}
           </span>
-        )}
-        {canManageMembers && isGroupOrChannel && (
-          <button
-            type="button"
-            aria-label="Edit conversation"
-            onClick={() => setShowEditModal(true)}
-            className="w-8 h-8 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors cursor-pointer mt-2"
-          >
-            <Pencil size={16} />
-          </button>
         )}
       </div>
 
@@ -231,6 +236,14 @@ export default function ContactDetails({
         </div>
       </div>
 
+      {errorMessage && (
+        <div className="px-5 pb-3">
+          <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">
+            {errorMessage}
+          </p>
+        </div>
+      )}
+
       {/* Leave button (group/channel only) */}
       {isGroupOrChannel && (
         <div className="px-5 pb-5 mt-auto">
@@ -259,15 +272,6 @@ export default function ContactDetails({
           existingParticipantIds={participants.map((p) => p.user_id)}
           onClose={handleCloseAddModal}
           isClosing={modalClosing}
-        />
-      )}
-
-      {/* Edit Conversation Modal */}
-      {showEditModal && conversation && (
-        <ConversationEditModal
-          conversation={conversation}
-          onClose={handleCloseEditModal}
-          isClosing={editModalClosing}
         />
       )}
     </div>
