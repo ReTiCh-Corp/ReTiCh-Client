@@ -18,11 +18,12 @@ vi.mock('../../api/client', () => ({
 }));
 
 const mockRemoveMutateAsync = vi.fn().mockResolvedValue({});
+const mockLeaveMutateAsync = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('../../hooks/useConversations', () => ({
   useConversation: vi.fn(),
   useLeaveConversation: vi.fn(() => ({
-    mutateAsync: vi.fn(),
+    mutateAsync: mockLeaveMutateAsync,
     isPending: false,
   })),
   useRemoveParticipant: vi.fn(() => ({
@@ -46,6 +47,17 @@ vi.mock('../../stores/useAuthStore', () => ({
 vi.mock('../../hooks/useUsers', () => ({
   useUsers: vi.fn(() => ({ data: { data: [] }, isLoading: false })),
 }));
+
+vi.mock('./AddParticipantModal', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="add-participant-modal">
+      <button type="button" onClick={onClose}>
+        close-add-modal
+      </button>
+    </div>
+  ),
+}));
+
 
 const { useConversation } = await import('../../hooks/useConversations');
 const mockUseConversation = vi.mocked(useConversation);
@@ -138,6 +150,8 @@ describe('ContactDetails', () => {
 
   beforeEach(() => {
     onClose.mockClear();
+    mockRemoveMutateAsync.mockClear();
+    mockLeaveMutateAsync.mockClear();
   });
 
   it('renders nothing when conversationId is null', () => {
@@ -272,6 +286,166 @@ describe('ContactDetails', () => {
       wrapper,
     });
     expect(screen.getByText('Our team group')).toBeInTheDocument();
+  });
+
+  it('renders nothing when conversation data is undefined', () => {
+    mockUseConversation.mockReturnValue({
+      data: { data: undefined },
+      isLoading: false,
+    } as unknown as ReturnType<typeof useConversation>);
+
+    const { container } = render(
+      <ContactDetails conversationId="conv-1" onClose={onClose} />,
+      { wrapper },
+    );
+    expect(container.innerHTML).toBe('');
+  });
+
+  it('shows "Direct message" when name is null', () => {
+    mockUseConversation.mockReturnValue({
+      data: {
+        data: {
+          ...mockDirectConversation.data,
+          name: null,
+        },
+      },
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-1" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.getByText('Direct message')).toBeInTheDocument();
+    expect(screen.getByText('?')).toBeInTheDocument();
+  });
+
+  it('shows Contact Info section for direct conversations', () => {
+    mockUseConversation.mockReturnValue({
+      data: mockDirectConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-1" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.getByText('Contact Info')).toBeInTheDocument();
+    expect(screen.getByText('Created')).toBeInTheDocument();
+  });
+
+  it('calls removeParticipant when remove button is clicked', async () => {
+    const user = userEvent.setup();
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    const removeButton = screen.getByLabelText('Remove Bob');
+    await user.click(removeButton);
+
+    expect(mockRemoveMutateAsync).toHaveBeenCalledWith({
+      conversationId: 'conv-2',
+      userId: 'user-2',
+    });
+  });
+
+  it('calls leaveConversation when Leave button is clicked', async () => {
+    const user = userEvent.setup();
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    await user.click(screen.getByText('Leave conversation'));
+
+    expect(mockLeaveMutateAsync).toHaveBeenCalledWith('conv-2');
+  });
+
+  it('does not show "Add" button for non-admin member in group', () => {
+    const memberGroupConversation = {
+      data: {
+        ...mockGroupConversation.data,
+        participants: [
+          {
+            id: 'p1',
+            conversation_id: 'conv-2',
+            user_id: 'current-user',
+            role: 'member',
+            nickname: 'me',
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+          {
+            id: 'p2',
+            conversation_id: 'conv-2',
+            user_id: 'user-2',
+            role: 'owner',
+            nickname: 'Bob',
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+    };
+
+    mockUseConversation.mockReturnValue({
+      data: memberGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.queryByText('Add')).not.toBeInTheDocument();
+  });
+
+  it('shows singular "member" for 1 participant', () => {
+    const singleMemberGroup = {
+      data: {
+        ...mockGroupConversation.data,
+        participants: [
+          {
+            id: 'p1',
+            conversation_id: 'conv-2',
+            user_id: 'current-user',
+            role: 'owner',
+            nickname: 'me',
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+    };
+
+    mockUseConversation.mockReturnValue({
+      data: singleMemberGroup,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.getByText('1 member')).toBeInTheDocument();
+  });
+
+  it('opens Add Participant modal when Add button is clicked', async () => {
+    const user = userEvent.setup();
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    expect(screen.queryByTestId('add-participant-modal')).not.toBeInTheDocument();
+    await user.click(screen.getByText('Add'));
+    expect(screen.getByTestId('add-participant-modal')).toBeInTheDocument();
   });
 
   it('shows error message when remove participant fails with 403', async () => {

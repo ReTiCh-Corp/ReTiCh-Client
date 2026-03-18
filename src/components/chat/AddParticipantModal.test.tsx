@@ -174,6 +174,20 @@ describe('AddParticipantModal', () => {
     expect(screen.getByText('Add (2)')).toBeInTheDocument();
   });
 
+  it('calls onClose when backdrop is clicked', async () => {
+    const user = userEvent.setup();
+    const { onClose } = renderModal();
+
+    const backdrop = screen.getByLabelText('Close modal');
+    await user.click(backdrop);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows "No users found" when all users are existing participants', () => {
+    renderModal(['1', '2', '3']);
+    expect(screen.getByText('No users found')).toBeInTheDocument();
+  });
+
   it('shows error message when adding participants fails with 403', async () => {
     mockMutateAsync.mockRejectedValueOnce(
       new ApiError(403, 'Forbidden'),
