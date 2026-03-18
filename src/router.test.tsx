@@ -14,6 +14,20 @@ vi.mock('./hooks/useConversations', () => ({
     isLoading: false,
     error: null,
   }),
+  useLeaveConversation: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useRemoveParticipant: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}));
+
+vi.mock('./stores/useAuthStore', () => ({
+  useAuthStore: vi.fn((selector: (s: unknown) => unknown) =>
+    selector({ user: { id: 'user-1', email: 'me@test.com', username: 'me' } }),
+  ),
 }));
 
 vi.mock('./hooks/useDebounce', () => ({
