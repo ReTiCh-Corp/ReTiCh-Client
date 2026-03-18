@@ -8,6 +8,7 @@ export const AUTH_ENDPOINTS = {
 export const USER_ENDPOINTS = {
   ME: '/users/me',
   BY_ID: (id: string) => `/users/${id}`,
+  LIST: '/users',
 } as const;
 
 export const CONVERSATION_ENDPOINTS = {

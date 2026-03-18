@@ -36,6 +36,7 @@ export interface CreateConversationInput {
   name?: string;
   description?: string;
   avatar_url?: string;
+  member_ids?: string[];
 }
 
 export function listConversations(params?: ListConversationsParams) {
