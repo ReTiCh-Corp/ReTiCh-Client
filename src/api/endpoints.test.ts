@@ -46,6 +46,18 @@ describe('endpoints', () => {
     it('has correct create path', () => {
       expect(CONVERSATION_ENDPOINTS.CREATE).toBe('/conversations');
     });
+
+    it('generates correct participants path', () => {
+      expect(CONVERSATION_ENDPOINTS.PARTICIPANTS('456')).toBe(
+        '/conversations/456/participants',
+      );
+    });
+
+    it('generates correct participant path', () => {
+      expect(CONVERSATION_ENDPOINTS.PARTICIPANT('456', '789')).toBe(
+        '/conversations/456/participants/789',
+      );
+    });
   });
 
   describe('MESSAGE_ENDPOINTS', () => {
