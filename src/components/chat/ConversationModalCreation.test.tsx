@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
+import { ApiError } from '../../api/client';
 import ConversationModalCreation from './ConversationModalCreation';
 
 const mockMutateAsync = vi.fn().mockResolvedValue({ data: { id: 'new' } });
@@ -14,6 +15,19 @@ vi.mock('../../hooks/useUsers', () => ({
 
 vi.mock('../../hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
+}));
+
+vi.mock('../../api/client', () => ({
+  ApiError: class ApiError extends Error {
+    status: number;
+    data?: unknown;
+    constructor(status: number, message: string, data?: unknown) {
+      super(message);
+      this.name = 'ApiError';
+      this.status = status;
+      this.data = data;
+    }
+  },
 }));
 
 vi.mock('../../hooks/useConversations', () => ({
@@ -39,15 +53,22 @@ function createWrapper() {
 }
 
 function renderModal(
-  props: { onClose?: () => void; isClosing?: boolean } = {},
+  props: {
+    onClose?: () => void;
+    isClosing?: boolean;
+    onConversationCreated?: (id: string) => void;
+  } = {},
 ) {
   const onClose = props.onClose ?? vi.fn();
+  const onConversationCreated = props.onConversationCreated ?? vi.fn();
   return {
     onClose,
+    onConversationCreated,
     ...render(
       <ConversationModalCreation
         onClose={onClose}
         isClosing={props.isClosing ?? false}
+        onConversationCreated={onConversationCreated}
       />,
       { wrapper: createWrapper() },
     ),
@@ -323,5 +344,37 @@ describe('ConversationModalCreation', () => {
       search: undefined,
       sort: 'new',
     });
+  });
+
+  it('redirects to existing conversation on 409 Conflict', async () => {
+    mockMutateAsync.mockRejectedValueOnce(
+      new ApiError(409, 'Conflict', { data: { id: 'existing-conv-id' } }),
+    );
+
+    const user = userEvent.setup();
+    const onConversationCreated = vi.fn();
+    const { onClose } = renderModal({ onConversationCreated });
+
+    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText('alice'));
+    await user.click(screen.getByText('Create'));
+
+    expect(onConversationCreated).toHaveBeenCalledWith('existing-conv-id');
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows error message on generic error', async () => {
+    mockMutateAsync.mockRejectedValueOnce(
+      new ApiError(500, 'Server error'),
+    );
+
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText('alice'));
+    await user.click(screen.getByText('Create'));
+
+    expect(screen.getByText('Server error')).toBeInTheDocument();
   });
 });

@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { User } from '../../api/users';
+import { ApiError } from '../../api/client';
 import { useCreateConversation } from '../../hooks/useConversations';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useUsers } from '../../hooks/useUsers';
@@ -38,11 +39,13 @@ const TYPE_OPTIONS: {
 interface ConversationModalCreationProps {
   onClose: () => void;
   isClosing: boolean;
+  onConversationCreated?: (id: string) => void;
 }
 
 export default function ConversationModalCreation({
   onClose,
   isClosing,
+  onConversationCreated,
 }: ConversationModalCreationProps) {
   const [selectedType, setSelectedType] = useState<ConversationType | null>(
     null,
@@ -50,6 +53,7 @@ export default function ConversationModalCreation({
   const [conversationName, setConversationName] = useState('');
   const [memberSearch, setMemberSearch] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const createMutation = useCreateConversation();
   const debouncedSearch = useDebounce(memberSearch, 300);
 
@@ -70,6 +74,7 @@ export default function ConversationModalCreation({
   }, [onClose]);
 
   const toggleMember = (member: User) => {
+    setErrorMessage(null);
     const isSelected = selectedMembers.some((m) => m.id === member.id);
     if (isSelected) {
       setSelectedMembers((prev) => prev.filter((m) => m.id !== member.id));
@@ -96,13 +101,29 @@ export default function ConversationModalCreation({
   const handleCreate = async () => {
     if (!isFormValid || !selectedType) return;
 
-    await createMutation.mutateAsync({
-      type: selectedType,
-      ...(needsName && { name: conversationName.trim() }),
-      participant_ids: selectedMembers.map((m) => m.id),
-    });
+    try {
+      await createMutation.mutateAsync({
+        type: selectedType,
+        ...(needsName && { name: conversationName.trim() }),
+        participant_ids: selectedMembers.map((m) => m.id),
+      });
 
-    onClose();
+      onClose();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        const existingConvId = (
+          err.data as { data?: { id?: string } }
+        )?.data?.id;
+        if (existingConvId) {
+          onConversationCreated?.(existingConvId);
+        }
+        onClose();
+      } else {
+        setErrorMessage(
+          err instanceof Error ? err.message : 'An error occurred',
+        );
+      }
+    }
   };
 
   return createPortal(
@@ -157,6 +178,7 @@ export default function ConversationModalCreation({
                       type="button"
                       onClick={() => {
                         setSelectedType(type);
+                        setErrorMessage(null);
                         // Reset members if switching to direct
                         if (type === 'direct' && selectedMembers.length > 1) {
                           setSelectedMembers([]);
@@ -280,6 +302,14 @@ export default function ConversationModalCreation({
               </div>
             </div>
           </div>
+
+          {errorMessage && (
+            <div className="px-6 pb-4">
+              <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">
+                {errorMessage}
+              </p>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-light">

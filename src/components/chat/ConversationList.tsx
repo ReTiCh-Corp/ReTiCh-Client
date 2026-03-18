@@ -167,6 +167,10 @@ export default function ConversationList({
         <ConversationModalCreation
           onClose={handleCloseModal}
           isClosing={modalClosing}
+          onConversationCreated={(id) => {
+            handleCloseModal();
+            onSelect(id);
+          }}
         />
       )}
     </div>
