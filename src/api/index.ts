@@ -1,14 +1,22 @@
 export { ApiError, apiClient } from './client';
 export type {
+  AddParticipantsInput,
   Conversation,
+  ConversationDetail,
   CreateConversationInput,
   ListConversationsParams,
   PaginationMeta,
+  Participant,
+  UpdateConversationInput,
 } from './conversations';
 export {
+  addParticipants,
+  archiveConversation,
   createConversation,
   getConversation,
   listConversations,
+  removeParticipant,
+  updateConversation,
 } from './conversations';
 export {
   AUTH_ENDPOINTS,
