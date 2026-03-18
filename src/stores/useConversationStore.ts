@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import type { Conversation } from '../api/conversations';
+import type { Conversation, Participant } from '../api/conversations';
 
 interface LocalConversation {
   id: string;
   name: string;
-  participants: string[];
+  participants: Participant[];
   lastMessageAt: string;
 }
 

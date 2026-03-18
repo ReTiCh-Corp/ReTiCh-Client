@@ -99,7 +99,7 @@ export default function ConversationModalCreation({
     await createMutation.mutateAsync({
       type: selectedType,
       ...(needsName && { name: conversationName.trim() }),
-      member_ids: selectedMembers.map((m) => m.id),
+      participant_ids: selectedMembers.map((m) => m.id),
     });
 
     onClose();

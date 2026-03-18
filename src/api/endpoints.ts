@@ -15,6 +15,9 @@ export const CONVERSATION_ENDPOINTS = {
   LIST: '/conversations',
   BY_ID: (id: string) => `/conversations/${id}`,
   CREATE: '/conversations',
+  PARTICIPANTS: (id: string) => `/conversations/${id}/participants`,
+  PARTICIPANT: (conversationId: string, userId: string) =>
+    `/conversations/${conversationId}/participants/${userId}`,
 } as const;
 
 export const MESSAGE_ENDPOINTS = {

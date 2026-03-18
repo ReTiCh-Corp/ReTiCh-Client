@@ -1,16 +1,25 @@
 import { useConversationStore } from './useConversationStore';
 
+const mockParticipant = (userId: string) => ({
+  id: `p-${userId}`,
+  conversation_id: '1',
+  user_id: userId,
+  role: 'member',
+  nickname: null,
+  joined_at: '2026-03-16T10:00:00Z',
+});
+
 const mockConversation = {
   id: '1',
   name: 'General',
-  participants: ['user1', 'user2'],
+  participants: [mockParticipant('user1'), mockParticipant('user2')],
   lastMessageAt: '2026-03-16T10:00:00Z',
 };
 
 const mockConversation2 = {
   id: '2',
   name: 'Random',
-  participants: ['user1', 'user3'],
+  participants: [mockParticipant('user1'), mockParticipant('user3')],
   lastMessageAt: '2026-03-16T11:00:00Z',
 };
 
