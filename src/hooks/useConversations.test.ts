@@ -193,7 +193,7 @@ describe('useArchiveConversation', () => {
 });
 
 describe('useAddParticipants', () => {
-  it('calls addParticipants and invalidates detail', async () => {
+  it('calls addParticipants and invalidates detail on settled', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -212,6 +212,99 @@ describe('useAddParticipants', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: conversationKeys.detail('c1'),
     });
+  });
+
+  it('performs optimistic update when cache has data', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const existingData = {
+      data: {
+        id: 'c1',
+        type: 'group',
+        name: 'Team',
+        description: null,
+        avatar_url: null,
+        creator_id: 'u0',
+        is_archived: false,
+        last_message_at: null,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+        participants: [
+          {
+            id: 'p1',
+            conversation_id: 'c1',
+            user_id: 'u0',
+            role: 'owner',
+            nickname: null,
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+    };
+
+    queryClient.setQueryData(conversationKeys.detail('c1'), existingData);
+
+    const { result } = renderHook(() => useAddParticipants(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      conversationId: 'c1',
+      participantIds: ['u1'],
+    });
+
+    expect(addParticipants).toHaveBeenCalledWith('c1', ['u1']);
+  });
+
+  it('rolls back on error', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const existingData = {
+      data: {
+        id: 'c1',
+        type: 'group',
+        name: 'Team',
+        description: null,
+        avatar_url: null,
+        creator_id: 'u0',
+        is_archived: false,
+        last_message_at: null,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+        participants: [
+          {
+            id: 'p1',
+            conversation_id: 'c1',
+            user_id: 'u0',
+            role: 'owner',
+            nickname: null,
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+    };
+
+    queryClient.setQueryData(conversationKeys.detail('c1'), existingData);
+    vi.mocked(addParticipants).mockRejectedValueOnce(new Error('fail'));
+
+    const { result } = renderHook(() => useAddParticipants(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await expect(
+      result.current.mutateAsync({
+        conversationId: 'c1',
+        participantIds: ['u1'],
+      }),
+    ).rejects.toThrow('fail');
+
+    // Should have rolled back to original data
+    const cached = queryClient.getQueryData(conversationKeys.detail('c1'));
+    expect(cached).toEqual(existingData);
   });
 });
 
@@ -238,6 +331,111 @@ describe('useRemoveParticipant', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: conversationKeys.lists(),
     });
+  });
+
+  it('performs optimistic removal from cache', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const existingData = {
+      data: {
+        id: 'c1',
+        type: 'group',
+        name: 'Team',
+        description: null,
+        avatar_url: null,
+        creator_id: 'u0',
+        is_archived: false,
+        last_message_at: null,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+        participants: [
+          {
+            id: 'p1',
+            conversation_id: 'c1',
+            user_id: 'u0',
+            role: 'owner',
+            nickname: null,
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+          {
+            id: 'p2',
+            conversation_id: 'c1',
+            user_id: 'u1',
+            role: 'member',
+            nickname: null,
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+    };
+
+    queryClient.setQueryData(conversationKeys.detail('c1'), existingData);
+
+    const { result } = renderHook(() => useRemoveParticipant(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current.mutateAsync({
+      conversationId: 'c1',
+      userId: 'u1',
+    });
+
+    expect(removeParticipant).toHaveBeenCalledWith('c1', 'u1');
+  });
+
+  it('rolls back on error', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const existingData = {
+      data: {
+        id: 'c1',
+        type: 'group',
+        name: 'Team',
+        description: null,
+        avatar_url: null,
+        creator_id: 'u0',
+        is_archived: false,
+        last_message_at: null,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+        participants: [
+          {
+            id: 'p1',
+            conversation_id: 'c1',
+            user_id: 'u0',
+            role: 'owner',
+            nickname: null,
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+          {
+            id: 'p2',
+            conversation_id: 'c1',
+            user_id: 'u1',
+            role: 'member',
+            nickname: null,
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+    };
+
+    queryClient.setQueryData(conversationKeys.detail('c1'), existingData);
+    vi.mocked(removeParticipant).mockRejectedValueOnce(new Error('fail'));
+
+    const { result } = renderHook(() => useRemoveParticipant(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await expect(
+      result.current.mutateAsync({ conversationId: 'c1', userId: 'u1' }),
+    ).rejects.toThrow('fail');
+
+    const cached = queryClient.getQueryData(conversationKeys.detail('c1'));
+    expect(cached).toEqual(existingData);
   });
 });
 

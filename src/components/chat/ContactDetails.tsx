@@ -1,17 +1,97 @@
-import { Image, X } from 'lucide-react';
+import { Image, Loader2, LogOut, UserPlus, X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import {
+  useConversation,
+  useLeaveConversation,
+  useRemoveParticipant,
+} from '../../hooks/useConversations';
+import { useAuthStore } from '../../stores/useAuthStore';
+import AddParticipantModal from './AddParticipantModal';
+import ParticipantList from './ParticipantList';
 
 interface ContactDetailsProps {
-  name: string | null;
+  conversationId: string | null;
   onClose: () => void;
 }
 
-export default function ContactDetails({ name, onClose }: ContactDetailsProps) {
-  if (!name) return null;
-
-  const initials = name
+function getInitials(name: string | null): string {
+  if (!name) return '?';
+  return name
     .split(' ')
     .map((w) => w[0])
-    .join('');
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+export default function ContactDetails({
+  conversationId,
+  onClose,
+}: ContactDetailsProps) {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [modalClosing, setModalClosing] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const modalTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  const { data: conversationData, isLoading } = useConversation(
+    conversationId ?? '',
+  );
+  const conversation = conversationData?.data;
+  const currentUser = useAuthStore((s) => s.user);
+
+  const removeParticipantMutation = useRemoveParticipant();
+  const leaveConversationMutation = useLeaveConversation();
+
+  if (!conversationId) return null;
+
+  if (isLoading) {
+    return (
+      <div className="w-[280px] min-w-[280px] h-full border-l border-border bg-white flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-grey-400" />
+      </div>
+    );
+  }
+
+  if (!conversation) return null;
+
+  const name = conversation.name;
+  const initials = getInitials(name);
+  const isGroupOrChannel =
+    conversation.type === 'group' || conversation.type === 'channel';
+  const participants = conversation.participants ?? [];
+
+  const currentParticipant = participants.find(
+    (p) => p.user_id === currentUser?.id,
+  );
+  const currentUserRole = currentParticipant?.role ?? 'member';
+  const canManageMembers =
+    currentUserRole === 'owner' || currentUserRole === 'admin';
+
+  const handleCloseAddModal = () => {
+    setModalClosing(true);
+    modalTimeout.current = setTimeout(() => {
+      setShowAddModal(false);
+      setModalClosing(false);
+    }, 200);
+  };
+
+  const handleRemoveParticipant = async (userId: string) => {
+    if (!conversationId) return;
+    setRemovingUserId(userId);
+    try {
+      await removeParticipantMutation.mutateAsync({
+        conversationId,
+        userId,
+      });
+    } finally {
+      setRemovingUserId(null);
+    }
+  };
+
+  const handleLeave = async () => {
+    if (!conversationId) return;
+    await leaveConversationMutation.mutateAsync(conversationId);
+  };
 
   return (
     <div className="w-[280px] min-w-[280px] h-full border-l border-border bg-white flex flex-col overflow-y-auto">
@@ -35,36 +115,75 @@ export default function ContactDetails({ name, onClose }: ContactDetailsProps) {
           <span className="font-display font-bold text-2xl text-primary-700">
             {initials}
           </span>
-          <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-leaf-500 border-2 border-white" />
+          {!isGroupOrChannel && (
+            <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-leaf-500 border-2 border-white" />
+          )}
         </div>
-        <h3 className="font-display font-bold text-lg text-text">{name}</h3>
-        <span className="text-sm text-text-muted">Sky is the limit</span>
+        <h3 className="font-display font-bold text-lg text-text">
+          {name ?? 'Direct message'}
+        </h3>
+        {conversation.description && (
+          <span className="text-sm text-text-muted text-center mt-1">
+            {conversation.description}
+          </span>
+        )}
+        {isGroupOrChannel && (
+          <span className="text-xs text-grey-400 mt-1">
+            {participants.length} member{participants.length !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
-      {/* Info Section */}
-      <div className="px-5 pb-5">
-        <h4 className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3">
-          Contact Info
-        </h4>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-text-muted">Mobile</span>
-            <span className="text-xs text-primary-600 font-medium">
-              +48 943 333 123
-            </span>
+      {/* Participants Section (group/channel only) */}
+      {isGroupOrChannel && participants.length > 0 && (
+        <div className="px-5 pb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider">
+              Members
+            </h4>
+            {canManageMembers && (
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-1 text-[11px] text-primary-600 font-medium hover:text-primary-700 cursor-pointer transition-colors"
+              >
+                <UserPlus size={12} />
+                Add
+              </button>
+            )}
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-text-muted">Email</span>
-            <span className="text-xs text-primary-600 font-medium">
-              user@retich.app
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-text-muted">Joined</span>
-            <span className="text-xs text-grey-600">March 2026</span>
+          <ParticipantList
+            participants={participants}
+            currentUserId={currentUser?.id ?? ''}
+            currentUserRole={currentUserRole}
+            onRemove={handleRemoveParticipant}
+            removingUserId={removingUserId}
+          />
+        </div>
+      )}
+
+      {/* Contact Info (direct only) */}
+      {!isGroupOrChannel && (
+        <div className="px-5 pb-5">
+          <h4 className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3">
+            Contact Info
+          </h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-text-muted">Members</span>
+              <span className="text-xs text-grey-600">
+                {participants.length}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-text-muted">Created</span>
+              <span className="text-xs text-grey-600">
+                {new Date(conversation.created_at).toLocaleDateString()}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Shared Media */}
       <div className="px-5 pb-5">
@@ -91,55 +210,36 @@ export default function ContactDetails({ name, onClose }: ContactDetailsProps) {
         </div>
       </div>
 
-      {/* Shared Files */}
-      <div className="px-5 pb-5">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider">
-            Files
-          </h4>
+      {/* Leave button (group/channel only) */}
+      {isGroupOrChannel && (
+        <div className="px-5 pb-5 mt-auto">
           <button
             type="button"
-            className="text-[11px] text-primary-600 font-medium hover:text-primary-700 cursor-pointer"
+            onClick={handleLeave}
+            disabled={leaveConversationMutation.isPending}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            View all
+            {leaveConversationMutation.isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <LogOut size={16} />
+            )}
+            {leaveConversationMutation.isPending
+              ? 'Leaving...'
+              : 'Leave conversation'}
           </button>
         </div>
-        <div className="space-y-2">
-          {[
-            {
-              name: 'Timeschedule_2024',
-              type: 'PDF',
-              size: '376 KB',
-              color: 'text-red-500',
-            },
-            {
-              name: 'Design System article...',
-              type: 'DOC',
-              size: '1.34 MB',
-              color: 'text-blue-500',
-            },
-          ].map((file) => (
-            <div
-              key={file.name}
-              className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-grey-50 transition-colors cursor-pointer"
-            >
-              <div className="w-9 h-9 rounded-lg bg-grey-100 flex items-center justify-center">
-                <span
-                  className={`text-[9px] font-bold uppercase ${file.color}`}
-                >
-                  {file.type}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-text truncate">
-                  {file.name}
-                </p>
-                <p className="text-[11px] text-grey-400">{file.size}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
+
+      {/* Add Participant Modal */}
+      {showAddModal && conversationId && (
+        <AddParticipantModal
+          conversationId={conversationId}
+          existingParticipantIds={participants.map((p) => p.user_id)}
+          onClose={handleCloseAddModal}
+          isClosing={modalClosing}
+        />
+      )}
     </div>
   );
 }

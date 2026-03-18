@@ -14,7 +14,8 @@ export default function Chat() {
   const closingTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const { data: conversationData } = useConversation(selectedId ?? '');
-  const selectedName = conversationData?.data?.name ?? null;
+  const conversation = conversationData?.data;
+  const selectedName = conversation?.name ?? null;
 
   const handleSelect = (id: string) => {
     setSelectedId(id);
@@ -66,7 +67,10 @@ export default function Chat() {
         <div
           className={`hidden md:flex ${detailsClosing ? 'animate-panel-out' : 'animate-panel-in'}`}
         >
-          <ContactDetails name={selectedName} onClose={handleCloseDetails} />
+          <ContactDetails
+            conversationId={selectedId}
+            onClose={handleCloseDetails}
+          />
         </div>
       )}
     </div>

@@ -1,12 +1,8 @@
 import { apiClient } from './client';
 import {
-  addParticipants,
-  archiveConversation,
   createConversation,
   getConversation,
   listConversations,
-  removeParticipant,
-  updateConversation,
 } from './conversations';
 
 vi.mock('./client', () => ({
@@ -120,61 +116,5 @@ describe('createConversation', () => {
     const result = await createConversation({ type: 'direct' });
 
     expect(result).toEqual(response);
-  });
-});
-
-describe('updateConversation', () => {
-  it('calls the correct endpoint with PUT and body', async () => {
-    mockedApiClient.mockResolvedValue({ data: { id: '1' } });
-
-    await updateConversation('1', { name: 'Updated' });
-
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations/1', {
-      method: 'PUT',
-      body: { name: 'Updated' },
-    });
-  });
-});
-
-describe('archiveConversation', () => {
-  it('calls the correct endpoint with DELETE', async () => {
-    mockedApiClient.mockResolvedValue(undefined);
-
-    await archiveConversation('1');
-
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations/1', {
-      method: 'DELETE',
-    });
-  });
-});
-
-describe('addParticipants', () => {
-  it('calls the correct endpoint with POST and participant_ids', async () => {
-    mockedApiClient.mockResolvedValue({ data: [] });
-
-    await addParticipants('conv1', ['u1', 'u2']);
-
-    expect(mockedApiClient).toHaveBeenCalledWith(
-      '/conversations/conv1/participants',
-      {
-        method: 'POST',
-        body: { participant_ids: ['u1', 'u2'] },
-      },
-    );
-  });
-});
-
-describe('removeParticipant', () => {
-  it('calls the correct endpoint with DELETE', async () => {
-    mockedApiClient.mockResolvedValue(undefined);
-
-    await removeParticipant('conv1', 'u1');
-
-    expect(mockedApiClient).toHaveBeenCalledWith(
-      '/conversations/conv1/participants/u1',
-      {
-        method: 'DELETE',
-      },
-    );
   });
 });

@@ -38,10 +38,38 @@ vi.mock('../hooks/useConversations', () => ({
     error: null,
   }),
   useConversation: () => ({
-    data: { data: { name: 'Adriana Hawk' } },
+    data: {
+      data: {
+        id: '1',
+        type: 'direct',
+        name: 'Adriana Hawk',
+        description: null,
+        avatar_url: null,
+        creator_id: null,
+        is_archived: false,
+        last_message_at: null,
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z',
+        participants: [],
+      },
+    },
     isLoading: false,
     error: null,
   }),
+  useLeaveConversation: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useRemoveParticipant: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}));
+
+vi.mock('../stores/useAuthStore', () => ({
+  useAuthStore: vi.fn((selector: (s: unknown) => unknown) =>
+    selector({ user: { id: 'user-1', email: 'me@test.com', username: 'me' } }),
+  ),
 }));
 
 vi.mock('../hooks/useDebounce', () => ({
@@ -58,27 +86,30 @@ function createWrapper() {
 }
 
 describe('Chat', () => {
-  it('renders conversation list, chat area and contact details', () => {
+  it('renders conversation list and chat area', () => {
     render(<Chat />, { wrapper: createWrapper() });
     expect(screen.getByText('Messages')).toBeInTheDocument();
-    expect(screen.getByText('Details')).toBeInTheDocument();
   });
 
-  it('selects a conversation when clicked', async () => {
+  it('selects a conversation and shows details panel', async () => {
     const user = userEvent.setup();
     render(<Chat />, { wrapper: createWrapper() });
 
     await user.click(screen.getAllByText('Adriana Hawk')[0]);
-    expect(screen.getAllByText('Adriana Hawk').length).toBeGreaterThanOrEqual(
-      1,
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Details')).toBeInTheDocument();
+    });
   });
 
   it('closes contact details when close button is clicked', async () => {
     const user = userEvent.setup();
     render(<Chat />, { wrapper: createWrapper() });
 
-    expect(screen.getByText('Details')).toBeInTheDocument();
+    // First select a conversation to show details
+    await user.click(screen.getAllByText('Adriana Hawk')[0]);
+    await waitFor(() => {
+      expect(screen.getByText('Details')).toBeInTheDocument();
+    });
 
     const closeButton = screen
       .getByText('Details')
