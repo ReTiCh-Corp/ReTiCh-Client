@@ -302,7 +302,6 @@ describe('useAddParticipants', () => {
       }),
     ).rejects.toThrow('fail');
 
-    // Should have rolled back to original data
     const cached = queryClient.getQueryData(conversationKeys.detail('c1'));
     expect(cached).toEqual(existingData);
   });

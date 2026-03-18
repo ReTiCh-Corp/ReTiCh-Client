@@ -1,4 +1,4 @@
-import { Image, Loader2, LogOut, UserPlus, X } from 'lucide-react';
+import { Image, Loader2, LogOut, Pencil, UserPlus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import {
   useConversation,
@@ -7,6 +7,7 @@ import {
 } from '../../hooks/useConversations';
 import { useAuthStore } from '../../stores/useAuthStore';
 import AddParticipantModal from './AddParticipantModal';
+import ConversationEditModal from './ConversationEditModal';
 import ParticipantList from './ParticipantList';
 
 interface ContactDetailsProps {
@@ -30,6 +31,8 @@ export default function ContactDetails({
 }: ContactDetailsProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editModalClosing, setEditModalClosing] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const modalTimeout = useRef<ReturnType<typeof setTimeout>>();
 
@@ -72,6 +75,14 @@ export default function ContactDetails({
     modalTimeout.current = setTimeout(() => {
       setShowAddModal(false);
       setModalClosing(false);
+    }, 200);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalClosing(true);
+    modalTimeout.current = setTimeout(() => {
+      setShowEditModal(false);
+      setEditModalClosing(false);
     }, 200);
   };
 
@@ -131,6 +142,16 @@ export default function ContactDetails({
           <span className="text-xs text-grey-400 mt-1">
             {participants.length} member{participants.length !== 1 ? 's' : ''}
           </span>
+        )}
+        {canManageMembers && isGroupOrChannel && (
+          <button
+            type="button"
+            aria-label="Edit conversation"
+            onClick={() => setShowEditModal(true)}
+            className="w-8 h-8 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors cursor-pointer mt-2"
+          >
+            <Pencil size={16} />
+          </button>
         )}
       </div>
 
@@ -238,6 +259,15 @@ export default function ContactDetails({
           existingParticipantIds={participants.map((p) => p.user_id)}
           onClose={handleCloseAddModal}
           isClosing={modalClosing}
+        />
+      )}
+
+      {/* Edit Conversation Modal */}
+      {showEditModal && conversation && (
+        <ConversationEditModal
+          conversation={conversation}
+          onClose={handleCloseEditModal}
+          isClosing={editModalClosing}
         />
       )}
     </div>

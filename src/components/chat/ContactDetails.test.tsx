@@ -20,6 +20,10 @@ vi.mock('../../hooks/useConversations', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   })),
+  useUpdateConversation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock('../../stores/useAuthStore', () => ({
@@ -32,6 +36,26 @@ vi.mock('../../stores/useAuthStore', () => ({
 
 vi.mock('../../hooks/useUsers', () => ({
   useUsers: vi.fn(() => ({ data: { data: [] }, isLoading: false })),
+}));
+
+vi.mock('./AddParticipantModal', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="add-participant-modal">
+      <button type="button" onClick={onClose}>
+        close-add-modal
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('./ConversationEditModal', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="edit-modal">
+      <button type="button" onClick={onClose}>
+        close-edit-modal
+      </button>
+    </div>
+  ),
 }));
 
 const { useConversation } = await import('../../hooks/useConversations');
@@ -263,6 +287,51 @@ describe('ContactDetails', () => {
     expect(screen.getByText('Our team group')).toBeInTheDocument();
   });
 
+  it('shows edit button for owner on group conversation', () => {
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.getByLabelText('Edit conversation')).toBeInTheDocument();
+  });
+
+  it('does not show edit button for regular member on group conversation', () => {
+    const mockGroupAsMember = {
+      data: {
+        ...mockGroupConversation.data,
+        participants: mockGroupConversation.data.participants.map((p) =>
+          p.user_id === 'current-user' ? { ...p, role: 'member' } : p,
+        ),
+      },
+    };
+
+    mockUseConversation.mockReturnValue({
+      data: mockGroupAsMember,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.queryByLabelText('Edit conversation')).not.toBeInTheDocument();
+  });
+
+  it('does not show edit button on direct conversation', () => {
+    mockUseConversation.mockReturnValue({
+      data: mockDirectConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-1" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.queryByLabelText('Edit conversation')).not.toBeInTheDocument();
+  });
+
   it('renders nothing when conversation data is undefined', () => {
     mockUseConversation.mockReturnValue({
       data: { data: undefined },
@@ -307,42 +376,6 @@ describe('ContactDetails', () => {
     expect(screen.getByText('Created')).toBeInTheDocument();
   });
 
-  it('does not show "Add" button for non-admin member in group', () => {
-    const memberGroupConversation = {
-      data: {
-        ...mockGroupConversation.data,
-        participants: [
-          {
-            id: 'p1',
-            conversation_id: 'conv-2',
-            user_id: 'current-user',
-            role: 'member',
-            nickname: 'me',
-            joined_at: '2026-01-01T00:00:00Z',
-          },
-          {
-            id: 'p2',
-            conversation_id: 'conv-2',
-            user_id: 'user-2',
-            role: 'owner',
-            nickname: 'Bob',
-            joined_at: '2026-01-01T00:00:00Z',
-          },
-        ],
-      },
-    };
-
-    mockUseConversation.mockReturnValue({
-      data: memberGroupConversation,
-      isLoading: false,
-    } as ReturnType<typeof useConversation>);
-
-    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
-      wrapper,
-    });
-    expect(screen.queryByText('Add')).not.toBeInTheDocument();
-  });
-
   it('calls removeParticipant when remove button is clicked', async () => {
     const user = userEvent.setup();
     mockUseConversation.mockReturnValue({
@@ -379,6 +412,42 @@ describe('ContactDetails', () => {
     expect(mockLeaveMutateAsync).toHaveBeenCalledWith('conv-2');
   });
 
+  it('does not show "Add" button for non-admin member in group', () => {
+    const memberGroupConversation = {
+      data: {
+        ...mockGroupConversation.data,
+        participants: [
+          {
+            id: 'p1',
+            conversation_id: 'conv-2',
+            user_id: 'current-user',
+            role: 'member',
+            nickname: 'me',
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+          {
+            id: 'p2',
+            conversation_id: 'conv-2',
+            user_id: 'user-2',
+            role: 'owner',
+            nickname: 'Bob',
+            joined_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+    };
+
+    mockUseConversation.mockReturnValue({
+      data: memberGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+    expect(screen.queryByText('Add')).not.toBeInTheDocument();
+  });
+
   it('shows singular "member" for 1 participant', () => {
     const singleMemberGroup = {
       data: {
@@ -405,5 +474,41 @@ describe('ContactDetails', () => {
       wrapper,
     });
     expect(screen.getByText('1 member')).toBeInTheDocument();
+  });
+
+  it('opens Add Participant modal when Add button is clicked', async () => {
+    const user = userEvent.setup();
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    expect(screen.queryByTestId('add-participant-modal')).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('Add'));
+
+    expect(screen.getByTestId('add-participant-modal')).toBeInTheDocument();
+  });
+
+  it('opens Edit modal when edit button is clicked', async () => {
+    const user = userEvent.setup();
+    mockUseConversation.mockReturnValue({
+      data: mockGroupConversation,
+      isLoading: false,
+    } as ReturnType<typeof useConversation>);
+
+    render(<ContactDetails conversationId="conv-2" onClose={onClose} />, {
+      wrapper,
+    });
+
+    expect(screen.queryByTestId('edit-modal')).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Edit conversation'));
+
+    expect(screen.getByTestId('edit-modal')).toBeInTheDocument();
   });
 });
