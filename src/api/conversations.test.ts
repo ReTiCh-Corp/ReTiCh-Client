@@ -42,6 +42,32 @@ describe('listConversations', () => {
     expect(mockedApiClient).toHaveBeenCalledWith('/conversations?limit=5');
   });
 
+  it('appends search as query param', async () => {
+    mockedApiClient.mockResolvedValue({ data: [] });
+
+    await listConversations({ search: 'hello' });
+
+    expect(mockedApiClient).toHaveBeenCalledWith('/conversations?search=hello');
+  });
+
+  it('appends search alongside limit and offset', async () => {
+    mockedApiClient.mockResolvedValue({ data: [] });
+
+    await listConversations({ limit: 10, offset: 0, search: 'test' });
+
+    expect(mockedApiClient).toHaveBeenCalledWith(
+      '/conversations?limit=10&search=test',
+    );
+  });
+
+  it('does not append search when empty string', async () => {
+    mockedApiClient.mockResolvedValue({ data: [] });
+
+    await listConversations({ search: '' });
+
+    expect(mockedApiClient).toHaveBeenCalledWith('/conversations');
+  });
+
   it('returns the API response', async () => {
     const response = { data: [{ id: '1', name: 'Test' }] };
     mockedApiClient.mockResolvedValue(response);

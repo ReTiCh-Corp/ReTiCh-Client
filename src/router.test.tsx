@@ -16,6 +16,10 @@ vi.mock('./hooks/useConversations', () => ({
   }),
 }));
 
+vi.mock('./hooks/useDebounce', () => ({
+  useDebounce: (value: string) => value,
+}));
+
 function renderRoute(initialRoute: string) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
