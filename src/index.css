@@ -211,3 +211,109 @@ h6 {
 .animate-modal-out {
   animation: modal-content-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
 }
+
+/* ── Onboarding Progress Shimmer ── */
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Callback Page Animations ── */
+
+@keyframes callback-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes callback-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes callback-circle-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes callback-check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes callback-pulse-1 {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes callback-pulse-2 {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes callback-bar-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-callback-card-in {
+  animation: callback-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-callback-fade-in {
+  animation: callback-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.animate-callback-circle-draw {
+  animation: callback-circle-draw 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
+}
+
+.animate-callback-check-draw {
+  animation: callback-check-draw 0.4s cubic-bezier(0.65, 0, 0.35, 1) 0.55s forwards;
+}
+
+.animate-callback-pulse-1 {
+  animation: callback-pulse-1 1s cubic-bezier(0, 0, 0.2, 1) 0.3s both;
+}
+
+.animate-callback-pulse-2 {
+  animation: callback-pulse-2 1s cubic-bezier(0, 0, 0.2, 1) 0.5s both;
+}
+
+.animate-callback-bar-fill {
+  animation: callback-bar-fill 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
