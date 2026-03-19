@@ -1,10 +1,5 @@
-function Home() {
-  return (
-    <div>
-      <h1>ReTiCh</h1>
-      <p>Real-Time Chat Application</p>
-    </div>
-  );
-}
+import { Navigate } from 'react-router-dom';
 
-export default Home;
+export default function Home() {
+  return <Navigate to="/chat" replace />;
+}

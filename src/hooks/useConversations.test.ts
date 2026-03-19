@@ -441,7 +441,12 @@ describe('useRemoveParticipant', () => {
 describe('useLeaveConversation', () => {
   it('calls removeParticipant with current user id and invalidates lists', async () => {
     useAuthStore.setState({
-      user: { id: 'me-123', email: 'me@test.com', username: 'me' },
+      user: {
+        id: 'me-123',
+        email: 'me@test.com',
+        username: 'me',
+        onboarding: true,
+      },
     });
 
     const queryClient = new QueryClient({
