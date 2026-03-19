@@ -1,9 +1,5 @@
-function Register() {
-  return (
-    <div>
-      <h1>Register</h1>
-    </div>
-  );
-}
+import { Navigate } from 'react-router-dom';
 
-export default Register;
+export default function Register() {
+  return <Navigate to="/login" replace />;
+}

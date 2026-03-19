@@ -24,9 +24,24 @@ vi.mock('./hooks/useConversations', () => ({
   }),
 }));
 
+const mockAuthState = {
+  user: {
+    id: 'user-1',
+    email: 'me@test.com',
+    username: 'me',
+    onboarding: true,
+  },
+  accessToken: 'fake-token',
+  refreshToken: 'fake-refresh',
+  setTokens: vi.fn(),
+  setUser: vi.fn(),
+  completeOnboarding: vi.fn(),
+  logout: vi.fn(),
+};
+
 vi.mock('./stores/useAuthStore', () => ({
-  useAuthStore: vi.fn((selector: (s: unknown) => unknown) =>
-    selector({ user: { id: 'user-1', email: 'me@test.com', username: 'me' } }),
+  useAuthStore: vi.fn((selector?: (s: unknown) => unknown) =>
+    selector ? selector(mockAuthState) : mockAuthState,
   ),
 }));
 
@@ -56,12 +71,12 @@ describe('Router', () => {
 
   it('renders the Login page on /login', () => {
     renderRoute('/login');
-    expect(screen.getByText('Login')).toBeInTheDocument();
+    expect(screen.getByText('Bon retour !')).toBeInTheDocument();
   });
 
   it('renders the Register page on /register', () => {
     renderRoute('/register');
-    expect(screen.getByText('Register')).toBeInTheDocument();
+    expect(screen.getByText('Créez votre compte')).toBeInTheDocument();
   });
 
   it('renders the Chat page on /chat', () => {

@@ -4,6 +4,7 @@ const mockUser = {
   id: '1',
   email: 'test@test.com',
   username: 'testuser',
+  onboarding: true,
 };
 
 beforeEach(() => {
