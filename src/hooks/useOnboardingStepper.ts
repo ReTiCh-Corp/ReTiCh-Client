@@ -23,8 +23,8 @@ export function useOnboardingStepper() {
     setError('');
     try {
       const payload: UpdateProfilePayload = {
-        firstName: onboardingStore.firstName,
-        lastName: onboardingStore.lastName,
+        first_name: onboardingStore.firstName,
+        last_name: onboardingStore.lastName,
         gender: onboardingStore.gender,
         username: onboardingStore.username,
       };
