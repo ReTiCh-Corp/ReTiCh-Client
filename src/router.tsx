@@ -7,6 +7,7 @@ import Chat from './pages/Chat';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
+import OnboardingSuccess from './pages/OnboardingSuccess';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
@@ -56,6 +57,10 @@ export const routes: RouteObject[] = [
             element: <Onboarding />,
           },
         ],
+      },
+      {
+        path: '/onboarding/success',
+        element: <OnboardingSuccess />,
       },
       {
         element: <AuthGuard />,
