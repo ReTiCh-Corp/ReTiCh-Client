@@ -9,7 +9,6 @@ describe('Home', () => {
         <Home />
       </MemoryRouter>,
     );
-    // Home renders a <Navigate to="/chat" replace />, so the container should be empty
     expect(container.innerHTML).toBe('');
   });
 });

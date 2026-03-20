@@ -31,8 +31,8 @@ export async function loginUser(
 }
 
 export interface UpdateProfilePayload {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   gender: string;
   username: string;
   phone?: string;

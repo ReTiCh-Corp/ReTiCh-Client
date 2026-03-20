@@ -9,7 +9,6 @@ describe('Register', () => {
         <Register />
       </MemoryRouter>,
     );
-    // Register renders a <Navigate to="/login" replace />, so the container should be empty
     expect(container.innerHTML).toBe('');
   });
 });

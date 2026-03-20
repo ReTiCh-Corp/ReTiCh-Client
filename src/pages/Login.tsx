@@ -8,8 +8,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('clientID', import.meta.env.VITE_AUTH_CLIENT_ID)
-
   const handleSignIn = async () => {
     setIsLoading(true);
     setError(null);
