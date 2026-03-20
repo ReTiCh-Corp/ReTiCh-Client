@@ -21,7 +21,7 @@ describe('listConversations', () => {
 
     await listConversations();
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/messaging/conversations');
   });
 
   it('appends limit and offset as query params', async () => {
@@ -30,7 +30,7 @@ describe('listConversations', () => {
     await listConversations({ limit: 10, offset: 20 });
 
     expect(mockedApiClient).toHaveBeenCalledWith(
-      '/conversations?limit=10&offset=20',
+      '/api/v1/messaging/conversations?limit=10&offset=20',
     );
   });
 
@@ -39,7 +39,7 @@ describe('listConversations', () => {
 
     await listConversations({ limit: 5 });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations?limit=5');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/messaging/conversations?limit=5');
   });
 
   it('appends search as query param', async () => {
@@ -47,7 +47,7 @@ describe('listConversations', () => {
 
     await listConversations({ search: 'hello' });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations?search=hello');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/messaging/conversations?search=hello');
   });
 
   it('appends search alongside limit and offset', async () => {
@@ -56,7 +56,7 @@ describe('listConversations', () => {
     await listConversations({ limit: 10, offset: 0, search: 'test' });
 
     expect(mockedApiClient).toHaveBeenCalledWith(
-      '/conversations?limit=10&search=test',
+      '/api/v1/messaging/conversations?limit=10&search=test',
     );
   });
 
@@ -65,7 +65,7 @@ describe('listConversations', () => {
 
     await listConversations({ search: '' });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/messaging/conversations');
   });
 
   it('returns the API response', async () => {
@@ -84,7 +84,7 @@ describe('getConversation', () => {
 
     await getConversation('abc');
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations/abc');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/messaging/conversations/abc');
   });
 
   it('returns the API response', async () => {
@@ -103,7 +103,7 @@ describe('createConversation', () => {
 
     await createConversation({ type: 'direct', name: 'New conv' });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/conversations', {
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/messaging/conversations', {
       method: 'POST',
       body: { type: 'direct', name: 'New conv' },
     });
