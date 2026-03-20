@@ -2,11 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@retish/auth/react';
 import { useAuthStore } from '../stores/useAuthStore';
+import { apiClient } from '../api/client';
+import { USER_ENDPOINTS } from '../api/endpoints';
 import CallbackBackground from '../components/callback/CallbackBackground';
 import CallbackBrandMark from '../components/callback/CallbackBrandMark';
 import CallbackVerifying from '../components/callback/CallbackVerifying';
 import CallbackSuccess from '../components/callback/CallbackSuccess';
 import CallbackError from '../components/callback/CallbackError';
+
+interface CreateUserResponse {
+  id: string;
+  email: string;
+  onboarding_completed: boolean;
+  is_new_user: boolean;
+}
 
 type CallbackPhase = 'verifying' | 'success' | 'error';
 
@@ -36,18 +45,29 @@ export default function Callback() {
 
         if (accessToken) {
           setTokens(accessToken, '');
-          setUser({
-            id: user.id || user.user_id,
-            email: user.email,
-            username: user.email.split('@')[0],
-            onboarding: false,
-          });
         }
+
+        const userId = user.id || user.user_id;
+        const userResponse = await apiClient<CreateUserResponse>(
+          USER_ENDPOINTS.LIST,
+          {
+            method: 'POST',
+            body: { id: userId, email: user.email },
+          },
+        );
+
+        setUser({
+          id: userResponse.id,
+          email: userResponse.email,
+          username: userResponse.email.split('@')[0],
+          onboarding: userResponse.onboarding_completed,
+        });
 
         setPhase('success');
 
+        const destination = userResponse.onboarding_completed ? '/' : '/onboarding';
         setTimeout(() => {
-          navigate('/onboarding', { replace: true });
+          navigate(destination, { replace: true });
         }, 1800);
       } catch (err) {
         setPhase('error');
