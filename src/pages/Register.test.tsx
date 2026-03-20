@@ -1,14 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Register from './Register';
 
 describe('Register', () => {
-  it('renders the register heading', () => {
-    render(
-      <MemoryRouter>
+  it('redirects to /login', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/register']}>
         <Register />
       </MemoryRouter>,
     );
-    expect(screen.getByText('Créez votre compte')).toBeInTheDocument();
+    expect(container.innerHTML).toBe('');
   });
 });

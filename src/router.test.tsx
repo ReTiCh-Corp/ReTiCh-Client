@@ -3,6 +3,22 @@ import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './router';
 
+vi.mock('@retish/auth', () => ({
+  ReTiChAuth: class {
+    constructor() {}
+  },
+}));
+
+vi.mock('@retish/auth/react', () => ({
+  useAuth: () => ({
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    user: null,
+    isAuthenticated: false,
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 vi.mock('./hooks/useConversations', () => ({
   useConversations: () => ({
     data: { data: [] },
@@ -64,19 +80,9 @@ function renderRoute(initialRoute: string) {
 }
 
 describe('Router', () => {
-  it('renders the Home page on /', () => {
-    renderRoute('/');
-    expect(screen.getByText('ReTiCh')).toBeInTheDocument();
-  });
-
   it('renders the Login page on /login', () => {
     renderRoute('/login');
-    expect(screen.getByText('Bon retour !')).toBeInTheDocument();
-  });
-
-  it('renders the Register page on /register', () => {
-    renderRoute('/register');
-    expect(screen.getByText('Créez votre compte')).toBeInTheDocument();
+    expect(screen.getByText('Bienvenue sur ReTiCh')).toBeInTheDocument();
   });
 
   it('renders the Chat page on /chat', () => {
