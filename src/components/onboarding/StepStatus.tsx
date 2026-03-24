@@ -1,5 +1,6 @@
 import { MessageCircle } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
+import type { UserStatus } from '../../api/auth';
 
 interface StepStatusProps {
   onNext: () => void;
@@ -7,12 +8,14 @@ interface StepStatusProps {
   isSubmitting: boolean;
 }
 
-const STATUS_SUGGESTIONS = [
-  'Disponible',
-  'Au travail',
-  'En vacances',
-  'Ne pas déranger',
-];
+export const STATUS_MAP: Record<string, UserStatus> = {
+  'Disponible': 'online',
+  'Au travail': 'busy',
+  'En vacances': 'away',
+  'Ne pas déranger': 'busy',
+};
+
+const STATUS_SUGGESTIONS = Object.keys(STATUS_MAP);
 
 export default function StepStatus({
   onNext,

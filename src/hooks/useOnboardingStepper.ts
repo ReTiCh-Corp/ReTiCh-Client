@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { updateProfile, type UpdateProfilePayload } from '../api/auth';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useOnboardingStore } from '../stores/useOnboardingStore';
+import { STATUS_MAP } from '../components/onboarding/StepStatus';
 
 const TOTAL_STEPS = 6;
 
@@ -29,7 +30,10 @@ export function useOnboardingStepper() {
         username: onboardingStore.username,
       };
       if (onboardingStore.phone) payload.phone = onboardingStore.phone;
-      if (onboardingStore.status) payload.status = onboardingStore.status;
+      if (onboardingStore.status) {
+        payload.status = STATUS_MAP[onboardingStore.status] ?? 'online';
+        payload.custom_status = onboardingStore.status;
+      }
 
       await updateProfile(payload);
 
