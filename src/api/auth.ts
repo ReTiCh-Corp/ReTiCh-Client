@@ -30,13 +30,16 @@ export async function loginUser(
   });
 }
 
+export type UserStatus = 'online' | 'offline' | 'away' | 'busy' | 'invisible';
+
 export interface UpdateProfilePayload {
   first_name: string;
   last_name: string;
   gender: string;
   username: string;
   phone?: string;
-  status?: string;
+  status?: UserStatus;
+  custom_status?: string;
 }
 
 export async function updateProfile(
