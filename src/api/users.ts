@@ -20,6 +20,11 @@ interface ApiResponse<T> {
   pagination?: PaginationMeta;
 }
 
+export function checkUsernameAvailability(username: string) {
+  const endpoint = `${USER_ENDPOINTS.CHECK_USERNAME}?username=${encodeURIComponent(username)}`;
+  return apiClient<{ available: boolean }>(endpoint);
+}
+
 export function listUsers(params?: ListUsersParams) {
   const searchParams = new URLSearchParams();
   if (params?.limit) searchParams.set('limit', String(params.limit));

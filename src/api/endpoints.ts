@@ -6,23 +6,24 @@ export const AUTH_ENDPOINTS = {
 } as const;
 
 export const USER_ENDPOINTS = {
-  ME: '/api/v1/user/users/me',
-  BY_ID: (id: string) => `/api/v1/user/users/${id}`,
-  LIST: '/api/v1/user/users',
+  ME: '/api/v1/users/me',
+  BY_ID: (id: string) => `/api/v1/users/${id}`,
+  LIST: '/api/v1/users',
+  CHECK_USERNAME: '/api/v1/users/check-username',
 } as const;
 
 export const CONVERSATION_ENDPOINTS = {
-  LIST: '/api/v1/messaging/conversations',
-  BY_ID: (id: string) => `/api/v1/messaging/conversations/${id}`,
-  CREATE: '/api/v1/messaging/conversations',
-  PARTICIPANTS: (id: string) => `/api/v1/messaging/conversations/${id}/participants`,
+  LIST: '/api/v1/conversations',
+  BY_ID: (id: string) => `/api/v1/conversations/${id}`,
+  CREATE: '/api/v1/conversations',
+  PARTICIPANTS: (id: string) => `/api/v1/conversations/${id}/participants`,
   PARTICIPANT: (conversationId: string, userId: string) =>
-    `/api/v1/messaging/conversations/${conversationId}/participants/${userId}`,
+    `/api/v1/conversations/${conversationId}/participants/${userId}`,
 } as const;
 
 export const MESSAGE_ENDPOINTS = {
   BY_CONVERSATION: (conversationId: string) =>
-    `/api/v1/messaging/conversations/${conversationId}/messages`,
+    `/api/v1/conversations/${conversationId}/messages`,
   SEND: (conversationId: string) =>
-    `/api/v1/messaging/conversations/${conversationId}/messages`,
+    `/api/v1/conversations/${conversationId}/messages`,
 } as const;

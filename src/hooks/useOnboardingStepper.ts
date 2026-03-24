@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { UpdateProfilePayload } from '../api/auth';
+import { updateProfile, type UpdateProfilePayload } from '../api/auth';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useOnboardingStore } from '../stores/useOnboardingStore';
 
@@ -31,12 +31,11 @@ export function useOnboardingStepper() {
       if (onboardingStore.phone) payload.phone = onboardingStore.phone;
       if (onboardingStore.status) payload.status = onboardingStore.status;
 
-      // TODO: quand le backend sera prêt, décommenter :
-      // await updateProfile(payload);
+      await updateProfile(payload);
 
       completeOnboarding();
       onboardingStore.reset();
-      navigate('/chat', { replace: true });
+      navigate('/onboarding/success', { replace: true });
     } catch {
       setError('Erreur lors de la sauvegarde du profil');
     } finally {
