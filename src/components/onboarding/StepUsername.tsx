@@ -1,22 +1,60 @@
-import { AtSign } from 'lucide-react';
-import { useState } from 'react';
+import { AtSign, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { checkUsernameAvailability } from '../../api/users';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
 
 interface StepUsernameProps {
   onNext: () => void;
 }
 
+type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken';
+
 export default function StepUsername({ onNext }: StepUsernameProps) {
   const { username, setField } = useOnboardingStore();
   const [touched, setTouched] = useState(false);
+  const [availability, setAvailability] = useState<AvailabilityStatus>('idle');
 
   const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
   const isValid = usernameRegex.test(username);
+  const debouncedUsername = useDebounce(username, 500);
+
+  useEffect(() => {
+    if (!debouncedUsername || !usernameRegex.test(debouncedUsername)) {
+      setAvailability('idle');
+      return;
+    }
+
+    let cancelled = false;
+    setAvailability('checking');
+
+    checkUsernameAvailability(debouncedUsername)
+      .then((res) => {
+        if (!cancelled) {
+          setAvailability(res.available ? 'available' : 'taken');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvailability('idle');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedUsername]);
+
+  // While the user is still typing (username !== debouncedUsername), show checking state
+  const isTyping = isValid && username !== debouncedUsername;
+  const displayStatus = isTyping ? 'checking' : availability;
+
+  const canSubmit = isValid && displayStatus === 'available';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (isValid) onNext();
+    if (canSubmit) onNext();
   };
 
   return (
@@ -60,9 +98,20 @@ export default function StepUsername({ onNext }: StepUsernameProps) {
             3 à 30 caractères : lettres, chiffres et underscores uniquement.
           </p>
         )}
-        {username && isValid && (
+        {isValid && displayStatus === 'checking' && (
+          <p className="text-xs text-grey-500 mt-1.5 flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Vérification…
+          </p>
+        )}
+        {isValid && displayStatus === 'available' && (
           <p className="text-xs text-leaf-600 mt-1.5 font-medium">
             @{username} est disponible !
+          </p>
+        )}
+        {isValid && displayStatus === 'taken' && (
+          <p className="text-xs text-red-500 mt-1.5">
+            @{username} est déjà pris.
           </p>
         )}
       </div>
@@ -70,7 +119,7 @@ export default function StepUsername({ onNext }: StepUsernameProps) {
       <div className="mt-auto pt-8">
         <button
           type="submit"
-          disabled={!isValid}
+          disabled={!canSubmit}
           className="w-full py-3.5 rounded-xl text-sm font-semibold bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] disabled:bg-grey-200 disabled:text-grey-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm"
         >
           Continuer

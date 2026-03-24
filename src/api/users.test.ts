@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { listUsers } from './users';
+import { checkUsernameAvailability, listUsers } from './users';
 
 vi.mock('./client', () => ({
   apiClient: vi.fn(),
@@ -87,5 +87,43 @@ describe('listUsers', () => {
     const result = await listUsers();
 
     expect(result).toEqual(response);
+  });
+});
+
+describe('checkUsernameAvailability', () => {
+  it('calls the correct endpoint with encoded username', async () => {
+    mockedApiClient.mockResolvedValue({ available: true });
+
+    await checkUsernameAvailability('alice');
+
+    expect(mockedApiClient).toHaveBeenCalledWith(
+      '/api/v1/users/check-username?username=alice',
+    );
+  });
+
+  it('encodes special characters in username', async () => {
+    mockedApiClient.mockResolvedValue({ available: true });
+
+    await checkUsernameAvailability('user name');
+
+    expect(mockedApiClient).toHaveBeenCalledWith(
+      '/api/v1/users/check-username?username=user%20name',
+    );
+  });
+
+  it('returns available true when username is free', async () => {
+    mockedApiClient.mockResolvedValue({ available: true });
+
+    const result = await checkUsernameAvailability('new_user');
+
+    expect(result).toEqual({ available: true });
+  });
+
+  it('returns available false when username is taken', async () => {
+    mockedApiClient.mockResolvedValue({ available: false });
+
+    const result = await checkUsernameAvailability('alice');
+
+    expect(result).toEqual({ available: false });
   });
 });
