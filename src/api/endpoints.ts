@@ -7,6 +7,7 @@ export const AUTH_ENDPOINTS = {
 
 export const USER_ENDPOINTS = {
   ME: '/api/v1/users/me',
+  COMPLETE_ONBOARDING: '/api/v1/users/me/onboarding',
   BY_ID: (id: string) => `/api/v1/users/${id}`,
   LIST: '/api/v1/users',
   CHECK_USERNAME: '/api/v1/users/check-username',

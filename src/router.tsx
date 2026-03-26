@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import OnboardingSuccess from './pages/OnboardingSuccess';
 import Profile from './pages/Profile';
+import ProfileEdit from './pages/ProfileEdit';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
 import { ReTiChAuth } from "@retish/auth"
@@ -79,6 +80,10 @@ export const routes: RouteObject[] = [
               {
                 path: '/profile',
                 element: <Profile />,
+              },
+              {
+                path: '/profile/edit',
+                element: <ProfileEdit />,
               },
             ],
           },
