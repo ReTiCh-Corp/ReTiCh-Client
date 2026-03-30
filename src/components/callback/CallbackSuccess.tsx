@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 export default function CallbackSuccess() {
+  const { t } = useTranslation();
   return (
     <div className="animate-callback-fade-in">
       {/* Animated check circle */}
@@ -46,12 +49,12 @@ export default function CallbackSuccess() {
       </div>
 
       <h1 className="font-display font-bold text-xl text-text mb-2">
-        Connexion validée
+        {t('callback.success')}
       </h1>
       <p className="text-sm text-text-muted leading-relaxed">
-        Votre identité a été confirmée par Reddish.
+        {t('callback.confirmed')}
         <br />
-        Redirection en cours…
+        {t('callback.redirecting')}
       </p>
 
       {/* Completed progress bar */}

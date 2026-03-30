@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@retish/auth/react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { apiClient } from '../api/client';
@@ -20,6 +21,7 @@ interface CreateUserResponse {
 type CallbackPhase = 'verifying' | 'success' | 'error';
 
 export default function Callback() {
+  const { t } = useTranslation();
   const { handleRedirectResult, getAccessToken } = useAuth();
   const { setTokens, setUser } = useAuthStore();
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export default function Callback() {
 
         if (!user) {
           setPhase('error');
-          setErrorMessage('Aucune session trouvée. Veuillez réessayer.');
+          setErrorMessage(t('callback.noSession'));
           return;
         }
 
@@ -74,7 +76,7 @@ export default function Callback() {
         setErrorMessage(
           err instanceof Error
             ? err.message
-            : "Échec de la vérification. Veuillez réessayer.",
+            : t('callback.verifyFailed'),
         );
       }
     }
@@ -101,7 +103,7 @@ export default function Callback() {
         </div>
 
         <p className="text-center text-xs text-text-light mt-6">
-          Authentification sécurisée via Reddish
+          {t('callback.secureAuth')}
         </p>
       </div>
     </div>

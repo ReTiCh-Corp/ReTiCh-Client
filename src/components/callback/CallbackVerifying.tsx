@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 export default function CallbackVerifying() {
+  const { t } = useTranslation();
   return (
     <div className="animate-callback-fade-in">
       {/* Spinner ring */}
@@ -15,10 +18,10 @@ export default function CallbackVerifying() {
       </div>
 
       <h1 className="font-display font-bold text-xl text-text mb-2">
-        Vérification en cours
+        {t('callback.verifying')}
       </h1>
       <p className="text-sm text-text-muted leading-relaxed">
-        Validation de votre connexion via Reddish…
+        {t('callback.validating')}
       </p>
 
       {/* Shimmer progress bar */}

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
+import i18n from '../../i18n';
 import { useConversationStore } from '../../stores/useConversationStore';
 import ConversationList from './ConversationList';
 
@@ -100,7 +101,7 @@ describe('ConversationList', () => {
     render(<ConversationList selectedId={null} onSelect={onSelect} />, {
       wrapper: createWrapper(),
     });
-    expect(screen.getByText('Messages')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
   });
 
   it('renders all conversations', () => {
@@ -142,7 +143,7 @@ describe('ConversationList', () => {
       wrapper: createWrapper(),
     });
 
-    const searchInput = screen.getByPlaceholderText('Search...');
+    const searchInput = screen.getByPlaceholderText(i18n.t('chat.search'));
     await user.type(searchInput, 'Adrian');
 
     expect(mockUseConversations).toHaveBeenCalledWith({ search: 'Adrian' });
@@ -167,7 +168,7 @@ describe('ConversationList', () => {
       wrapper: createWrapper(),
     });
 
-    const searchInput = screen.getByPlaceholderText('Search...');
+    const searchInput = screen.getByPlaceholderText(i18n.t('chat.search'));
     await user.type(searchInput, 'Adrian');
 
     expect(screen.getByText('Adriana Hawk')).toBeInTheDocument();
@@ -204,7 +205,7 @@ describe('ConversationList', () => {
     });
 
     expect(
-      screen.queryByText('Failed to load conversations'),
+      screen.queryByText(i18n.t('chat.loadError')),
     ).not.toBeInTheDocument();
   });
 
@@ -220,7 +221,7 @@ describe('ConversationList', () => {
     });
 
     expect(
-      screen.getByText('Failed to load conversations'),
+      screen.getByText(i18n.t('chat.loadError')),
     ).toBeInTheDocument();
   });
 

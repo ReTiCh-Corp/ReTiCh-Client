@@ -1,13 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import i18n from '../../i18n';
 import ChatArea from './ChatArea';
 
 describe('ChatArea', () => {
   it('shows placeholder when no conversation is selected', () => {
     render(<ChatArea conversationName={null} />);
-    expect(screen.getByText('Select a conversation')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.selectConversation'))).toBeInTheDocument();
     expect(
-      screen.getByText('Choose a chat to start messaging'),
+      screen.getByText(i18n.t('chat.startMessaging')),
     ).toBeInTheDocument();
   });
 
@@ -15,7 +16,7 @@ describe('ChatArea', () => {
     render(<ChatArea conversationName="Samantha Smith" />);
     expect(screen.getByText('Samantha Smith')).toBeInTheDocument();
     expect(screen.getAllByText('SS').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Online')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.online'))).toBeInTheDocument();
   });
 
   it('renders mock messages', () => {
@@ -27,7 +28,7 @@ describe('ChatArea', () => {
   it('renders the input with placeholder containing first name', () => {
     render(<ChatArea conversationName="Samantha Smith" />);
     expect(
-      screen.getByPlaceholderText('Whisper something to Samantha...'),
+      screen.getByPlaceholderText(i18n.t('chat.whisper', { name: 'Samantha' })),
     ).toBeInTheDocument();
   });
 
@@ -36,7 +37,7 @@ describe('ChatArea', () => {
     render(<ChatArea conversationName="Samantha Smith" />);
 
     const input = screen.getByPlaceholderText(
-      'Whisper something to Samantha...',
+      i18n.t('chat.whisper', { name: 'Samantha' }),
     );
     await user.type(input, 'Hello!');
     expect(input).toHaveValue('Hello!');

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
+import i18n from '../../i18n';
 import { ApiError } from '../../api/client';
 import ConversationModalCreation from './ConversationModalCreation';
 
@@ -87,14 +88,14 @@ beforeEach(() => {
 describe('ConversationModalCreation', () => {
   it('renders the modal with title', () => {
     renderModal();
-    expect(screen.getByText('New conversation')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.modal.title'))).toBeInTheDocument();
   });
 
   it('renders the three type options', () => {
     renderModal();
-    expect(screen.getByText('Direct')).toBeInTheDocument();
-    expect(screen.getByText('Group')).toBeInTheDocument();
-    expect(screen.getByText('Channel')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.modal.direct'))).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.modal.group'))).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.modal.channel'))).toBeInTheDocument();
   });
 
   it('renders member list from useUsers', () => {
@@ -107,20 +108,20 @@ describe('ConversationModalCreation', () => {
   it('shows "No members found" when user list is empty and not loading', () => {
     mockUseUsers.mockReturnValue({ data: { data: [] }, isLoading: false });
     renderModal();
-    expect(screen.getByText('No members found')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.modal.noMembers'))).toBeInTheDocument();
   });
 
   it('shows loader when loading and no members', () => {
     mockUseUsers.mockReturnValue({ data: { data: [] }, isLoading: true });
     renderModal();
-    expect(screen.queryByText('No members found')).not.toBeInTheDocument();
+    expect(screen.queryByText(i18n.t('chat.modal.noMembers'))).not.toBeInTheDocument();
   });
 
   it('calls onClose when Cancel is clicked', async () => {
     const user = userEvent.setup();
     const { onClose } = renderModal();
 
-    await user.click(screen.getByText('Cancel'));
+    await user.click(screen.getByText(i18n.t('chat.modal.cancel')));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -151,16 +152,16 @@ describe('ConversationModalCreation', () => {
 
   it('Create button is disabled by default', () => {
     renderModal();
-    expect(screen.getByText('Create').closest('button')).toBeDisabled();
+    expect(screen.getByText(i18n.t('chat.modal.create')).closest('button')).toBeDisabled();
   });
 
   it('does not show name input by default', () => {
     renderModal();
     expect(
-      screen.queryByPlaceholderText('Group name...'),
+      screen.queryByPlaceholderText(i18n.t('chat.modal.groupPlaceholder')),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByPlaceholderText('Channel name...'),
+      screen.queryByPlaceholderText(i18n.t('chat.modal.channelPlaceholder')),
     ).not.toBeInTheDocument();
   });
 
@@ -168,23 +169,23 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Group'));
-    expect(screen.getByPlaceholderText('Group name...')).toBeInTheDocument();
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
+    expect(screen.getByPlaceholderText(i18n.t('chat.modal.groupPlaceholder'))).toBeInTheDocument();
   });
 
   it('shows name input when Channel is selected', async () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Channel'));
-    expect(screen.getByPlaceholderText('Channel name...')).toBeInTheDocument();
+    await user.click(screen.getByText(i18n.t('chat.modal.channel')));
+    expect(screen.getByPlaceholderText(i18n.t('chat.modal.channelPlaceholder'))).toBeInTheDocument();
   });
 
   it('selects a member when clicked', async () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText(i18n.t('chat.modal.direct')));
     await user.click(screen.getByText('alice'));
 
     // Should show pill with username
@@ -196,40 +197,40 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText(i18n.t('chat.modal.direct')));
     await user.click(screen.getByText('alice'));
 
-    expect(screen.getByText('Create').closest('button')).toBeEnabled();
+    expect(screen.getByText(i18n.t('chat.modal.create')).closest('button')).toBeEnabled();
   });
 
   it('keeps Create disabled for group without name', async () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Group'));
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
     await user.click(screen.getByText('alice'));
 
-    expect(screen.getByText('Create').closest('button')).toBeDisabled();
+    expect(screen.getByText(i18n.t('chat.modal.create')).closest('button')).toBeDisabled();
   });
 
   it('enables Create for group with name and member', async () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Group'));
-    await user.type(screen.getByPlaceholderText('Group name...'), 'My Group');
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
+    await user.type(screen.getByPlaceholderText(i18n.t('chat.modal.groupPlaceholder')), 'My Group');
     await user.click(screen.getByText('alice'));
 
-    expect(screen.getByText('Create').closest('button')).toBeEnabled();
+    expect(screen.getByText(i18n.t('chat.modal.create')).closest('button')).toBeEnabled();
   });
 
   it('calls mutateAsync with correct payload for direct', async () => {
     const user = userEvent.setup();
     const { onClose } = renderModal();
 
-    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText(i18n.t('chat.modal.direct')));
     await user.click(screen.getByText('alice'));
-    await user.click(screen.getByText('Create'));
+    await user.click(screen.getByText(i18n.t('chat.modal.create')));
 
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'direct',
@@ -242,11 +243,11 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     const { onClose } = renderModal();
 
-    await user.click(screen.getByText('Group'));
-    await user.type(screen.getByPlaceholderText('Group name...'), 'Team Chat');
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
+    await user.type(screen.getByPlaceholderText(i18n.t('chat.modal.groupPlaceholder')), 'Team Chat');
     await user.click(screen.getByText('alice'));
     await user.click(screen.getByText('bob'));
-    await user.click(screen.getByText('Create'));
+    await user.click(screen.getByText(i18n.t('chat.modal.create')));
 
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'group',
@@ -260,12 +261,12 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText(i18n.t('chat.modal.direct')));
     await user.click(screen.getByText('alice'));
     await user.click(screen.getByText('bob'));
 
     // Only bob should be selected (replaced alice)
-    await user.click(screen.getByText('Create'));
+    await user.click(screen.getByText(i18n.t('chat.modal.create')));
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'direct',
       participant_ids: ['2'],
@@ -276,12 +277,12 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Group'));
-    await user.type(screen.getByPlaceholderText('Group name...'), 'Team');
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
+    await user.type(screen.getByPlaceholderText(i18n.t('chat.modal.groupPlaceholder')), 'Team');
     await user.click(screen.getByText('alice'));
     await user.click(screen.getByText('bob'));
     await user.click(screen.getByText('carol'));
-    await user.click(screen.getByText('Create'));
+    await user.click(screen.getByText(i18n.t('chat.modal.create')));
 
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'group',
@@ -294,14 +295,14 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Group'));
-    await user.type(screen.getByPlaceholderText('Group name...'), 'Team');
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
+    await user.type(screen.getByPlaceholderText(i18n.t('chat.modal.groupPlaceholder')), 'Team');
     await user.click(screen.getByText('alice'));
     await user.click(screen.getByText('bob'));
     // Deselect alice — click in the member list (second occurrence, first is pill)
     const aliceElements = screen.getAllByText('alice');
     await user.click(aliceElements[aliceElements.length - 1]);
-    await user.click(screen.getByText('Create'));
+    await user.click(screen.getByText(i18n.t('chat.modal.create')));
 
     expect(mockMutateAsync).toHaveBeenCalledWith({
       type: 'group',
@@ -314,22 +315,22 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Group'));
-    await user.type(screen.getByPlaceholderText('Group name...'), 'Team');
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
+    await user.type(screen.getByPlaceholderText(i18n.t('chat.modal.groupPlaceholder')), 'Team');
     await user.click(screen.getByText('alice'));
     await user.click(screen.getByText('bob'));
 
     // Switch to direct — should clear members since > 1
-    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText(i18n.t('chat.modal.direct')));
 
-    expect(screen.getByText('Create').closest('button')).toBeDisabled();
+    expect(screen.getByText(i18n.t('chat.modal.create')).closest('button')).toBeDisabled();
   });
 
   it('passes search term to useUsers', async () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.type(screen.getByPlaceholderText('Search members...'), 'ali');
+    await user.type(screen.getByPlaceholderText(i18n.t('chat.modal.searchMembers')), 'ali');
 
     expect(mockUseUsers).toHaveBeenCalledWith({
       search: 'ali',
@@ -355,9 +356,9 @@ describe('ConversationModalCreation', () => {
     const onConversationCreated = vi.fn();
     const { onClose } = renderModal({ onConversationCreated });
 
-    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText(i18n.t('chat.modal.direct')));
     await user.click(screen.getByText('alice'));
-    await user.click(screen.getByText('Create'));
+    await user.click(screen.getByText(i18n.t('chat.modal.create')));
 
     expect(onConversationCreated).toHaveBeenCalledWith('existing-conv-id');
     expect(onClose).toHaveBeenCalled();
@@ -371,9 +372,9 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Direct'));
+    await user.click(screen.getByText(i18n.t('chat.modal.direct')));
     await user.click(screen.getByText('alice'));
-    await user.click(screen.getByText('Create'));
+    await user.click(screen.getByText(i18n.t('chat.modal.create')));
 
     expect(screen.getByText('Server error')).toBeInTheDocument();
   });
@@ -382,8 +383,8 @@ describe('ConversationModalCreation', () => {
     const user = userEvent.setup();
     renderModal();
 
-    await user.click(screen.getByText('Group'));
-    await user.type(screen.getByPlaceholderText('Group name...'), 'Team');
+    await user.click(screen.getByText(i18n.t('chat.modal.group')));
+    await user.type(screen.getByPlaceholderText(i18n.t('chat.modal.groupPlaceholder')), 'Team');
     await user.click(screen.getByText('alice'));
 
     // Should have pill

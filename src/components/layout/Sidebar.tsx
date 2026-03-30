@@ -1,15 +1,16 @@
 import { MessageSquare, Settings, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const navItems = [
   {
     path: '/chat',
-    label: 'Chat',
+    labelKey: 'nav.chat',
     icon: <MessageSquare size={22} />,
   },
   {
     path: '/settings',
-    label: 'Settings',
+    labelKey: 'nav.settings',
     icon: <Settings size={22} />,
   },
 ];
@@ -17,9 +18,10 @@ const navItems = [
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
-    <aside className="flex flex-col items-center w-[68px] min-w-[68px] h-screen bg-white border-r border-border py-6 gap-2">
+    <aside className="flex flex-col items-center w-[68px] min-w-[68px] h-screen bg-surface border-r border-border py-6 gap-2">
       {/* Logo */}
       <button
         type="button"
@@ -38,7 +40,7 @@ export default function Sidebar() {
               key={item.path}
               type="button"
               onClick={() => navigate(item.path)}
-              title={item.label}
+              title={t(item.labelKey)}
               className={`
                 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer
                 ${

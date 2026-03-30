@@ -7,6 +7,7 @@ import {
   Smile,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -55,6 +56,7 @@ interface ChatAreaProps {
 
 export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
   const [message, setMessage] = useState('');
+  const { t } = useTranslation();
 
   if (!conversationName) {
     return (
@@ -68,10 +70,10 @@ export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
             />
           </div>
           <h3 className="font-display font-bold text-lg text-text mb-1">
-            Select a conversation
+            {t('chat.selectConversation')}
           </h3>
           <p className="text-sm text-text-muted">
-            Choose a chat to start messaging
+            {t('chat.startMessaging')}
           </p>
         </div>
       </div>
@@ -81,13 +83,13 @@ export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-surface-alt">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-border">
+      <div className="flex items-center justify-between px-6 py-4 bg-surface border-b border-border">
         <div className="flex items-center gap-3">
           {/* Mobile back button */}
           {onBack && (
             <button
               type="button"
-              aria-label="Back"
+              aria-label={t('chat.back')}
               onClick={onBack}
               className="md:hidden w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-500 hover:text-grey-700 transition-colors cursor-pointer -ml-1"
             >
@@ -106,7 +108,7 @@ export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
             </h3>
             <span className="text-xs text-leaf-600 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-leaf-500 inline-block" />
-              Online
+              {t('chat.online')}
             </span>
           </div>
         </div>
@@ -153,7 +155,7 @@ export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
                   ${
                     msg.sender === 'me'
                       ? 'bg-primary-600 text-white rounded-2xl rounded-br-md'
-                      : 'bg-white text-text rounded-2xl rounded-bl-md shadow-sm border border-border-light'
+                      : 'bg-surface text-text rounded-2xl rounded-bl-md shadow-sm border border-border-light'
                   }
                 `}
                 >
@@ -171,7 +173,7 @@ export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
       </div>
 
       {/* Input */}
-      <div className="px-6 py-4 bg-white border-t border-border">
+      <div className="px-6 py-4 bg-surface border-t border-border">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -181,7 +183,7 @@ export default function ChatArea({ conversationName, onBack }: ChatAreaProps) {
           </button>
           <input
             type="text"
-            placeholder={`Whisper something to ${conversationName.split(' ')[0]}...`}
+            placeholder={t('chat.whisper', { name: conversationName.split(' ')[0] })}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="flex-1 py-2.5 px-4 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"

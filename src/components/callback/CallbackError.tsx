@@ -1,9 +1,12 @@
+import { useTranslation } from 'react-i18next';
+
 interface CallbackErrorProps {
   message: string;
   onRetry: () => void;
 }
 
 export default function CallbackError({ message, onRetry }: CallbackErrorProps) {
+  const { t } = useTranslation();
   return (
     <div className="animate-callback-fade-in">
       {/* Error icon */}
@@ -44,7 +47,7 @@ export default function CallbackError({ message, onRetry }: CallbackErrorProps) 
       </div>
 
       <h1 className="font-display font-bold text-xl text-text mb-2">
-        Échec de la connexion
+        {t('callback.failed')}
       </h1>
       <p className="text-sm text-text-muted leading-relaxed mb-8">
         {message}
@@ -55,7 +58,7 @@ export default function CallbackError({ message, onRetry }: CallbackErrorProps) 
         onClick={onRetry}
         className="w-full py-3 rounded-xl text-sm font-semibold bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] transition-all duration-150 shadow-sm cursor-pointer"
       >
-        Retour à la connexion
+        {t('callback.backToLogin')}
       </button>
     </div>
   );
