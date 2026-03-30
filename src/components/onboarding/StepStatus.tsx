@@ -1,14 +1,13 @@
 import { MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
+import type { UserStatus } from '../../api/auth';
 
 interface StepStatusProps {
   onNext: () => void;
   onSkip: () => void;
   isSubmitting: boolean;
 }
-
-type UserStatus = 'online' | 'away' | 'busy' | 'offline';
 
 export const STATUS_PRESETS: { labelKey: string; userStatus: UserStatus }[] = [
   { labelKey: 'onboarding.status.available', userStatus: 'online' },

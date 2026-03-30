@@ -1,26 +1,28 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
-import { USER_ENDPOINTS } from '../api/endpoints';
-import type { User, UpdateProfileInput } from '../api/users';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type UpdateProfileInput,
+  getMyProfile,
+  updateMyProfile,
+} from '../api/users';
+
+export const profileKeys = {
+  all: ['profile'] as const,
+  me: () => [...profileKeys.all, 'me'] as const,
+};
 
 export function useMyProfile() {
-  return useQuery<User>({
-    queryKey: ['profile', 'me'],
-    queryFn: () => apiClient<User>(USER_ENDPOINTS.ME),
+  return useQuery({
+    queryKey: profileKeys.me(),
+    queryFn: getMyProfile,
   });
 }
 
 export function useUpdateMyProfile() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: (input: UpdateProfileInput) =>
-      apiClient<User>(USER_ENDPOINTS.ME, {
-        method: 'PUT',
-        body: input,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
+    mutationFn: (input: UpdateProfileInput) => updateMyProfile(input),
+    onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(profileKeys.me(), updatedProfile);
     },
   });
 }

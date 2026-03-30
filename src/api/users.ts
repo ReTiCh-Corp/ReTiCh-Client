@@ -49,6 +49,47 @@ export function checkUsernameAvailability(username: string) {
   return apiClient<{ available: boolean }>(endpoint);
 }
 
+export interface Profile {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  status: string;
+  custom_status: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  gender: string | null;
+  phone: string | null;
+  last_seen_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateProfileInput {
+  username: string;
+  status: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  custom_status?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  gender?: string | null;
+  phone?: string | null;
+}
+
+export function getMyProfile() {
+  return apiClient<Profile>(USER_ENDPOINTS.ME);
+}
+
+export function updateMyProfile(input: UpdateProfileInput) {
+  return apiClient<Profile>(USER_ENDPOINTS.ME, {
+    method: 'PUT',
+    body: input,
+  });
+}
+
 export function listUsers(params?: ListUsersParams) {
   const searchParams = new URLSearchParams();
   if (params?.limit) searchParams.set('limit', String(params.limit));
