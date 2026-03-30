@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import i18n from '../i18n';
 import Login from './Login';
 
 vi.mock('@retish/auth/react', () => ({
@@ -19,6 +20,6 @@ describe('Login', () => {
         <Login />
       </MemoryRouter>,
     );
-    expect(screen.getByText('Bienvenue sur ReTiCh')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('login.welcome'))).toBeInTheDocument();
   });
 });

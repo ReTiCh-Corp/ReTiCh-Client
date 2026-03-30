@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const REDIRECT_SECONDS = 5;
 
@@ -65,6 +66,7 @@ function createBurst(
 }
 
 export default function OnboardingSuccess() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -275,10 +277,10 @@ export default function OnboardingSuccess() {
             }}
           >
             <h1 className="font-display font-bold text-2xl text-text mb-2">
-              Bienvenue sur ReTiCh !
+              {t('onboarding.welcome')}
             </h1>
             <p className="text-sm text-text-muted leading-relaxed mb-8">
-              Votre profil est prêt. Vous allez être redirigé…
+              {t('onboarding.profileReady')}
             </p>
 
             {/* CTA Button */}
@@ -291,12 +293,12 @@ export default function OnboardingSuccess() {
                   'linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%)',
               }}
             >
-              Accéder à ReTiCh
+              {t('onboarding.goToApp')}
             </button>
 
             {/* Countdown */}
             <p className="text-xs text-text-light mt-4">
-              Redirection dans {secondsLeft}s…
+              {t('onboarding.redirectCountdown', { seconds: secondsLeft })}
             </p>
 
             {/* Progress bar */}

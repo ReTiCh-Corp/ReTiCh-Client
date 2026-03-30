@@ -1,6 +1,8 @@
 import { MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function AuthBrandPanel() {
+  const { t } = useTranslation();
   return (
     <div className="hidden md:flex md:w-1/2 lg:w-[45%] relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 flex-col items-center justify-center p-12 text-white">
       {/* Decorative floating blobs */}
@@ -51,11 +53,10 @@ export default function AuthBrandPanel() {
         </div>
 
         <h2 className="font-display font-bold text-4xl lg:text-5xl mb-4 leading-tight tracking-tight">
-          ReTiCh
+          {t('login.brand')}
         </h2>
         <p className="text-primary-100 text-base lg:text-lg leading-relaxed font-light">
-          Discutez en temps réel avec vos proches, simplement et en toute
-          sécurité.
+          {t('auth.brandTagline')}
         </p>
 
         {/* Decorative dots */}

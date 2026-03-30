@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   type Gender,
   useOnboardingStore,
@@ -7,13 +8,14 @@ interface StepGenderProps {
   onNext: () => void;
 }
 
-const GENDER_OPTIONS: { value: Gender; label: string; emoji: string }[] = [
-  { value: 'male', label: 'Homme', emoji: '👨' },
-  { value: 'female', label: 'Femme', emoji: '👩' },
-  { value: 'other', label: 'Autre', emoji: '🌈' },
+const GENDER_OPTIONS: { value: Gender; labelKey: string; emoji: string }[] = [
+  { value: 'male', labelKey: 'profile.male', emoji: '👨' },
+  { value: 'female', labelKey: 'profile.female', emoji: '👩' },
+  { value: 'other', labelKey: 'profile.other', emoji: '🌈' },
 ];
 
 export default function StepGender({ onNext }: StepGenderProps) {
+  const { t } = useTranslation();
   const { gender, setField } = useOnboardingStore();
 
   const handleSelect = (value: Gender) => {
@@ -29,10 +31,10 @@ export default function StepGender({ onNext }: StepGenderProps) {
     <form onSubmit={handleSubmit} className="flex flex-col flex-1">
       <div className="mt-8 mb-2">
         <h1 className="font-display font-bold text-2xl text-text leading-tight">
-          Quel est votre sexe ?
+          {t('onboarding.gender.title')}
         </h1>
         <p className="text-sm text-text-muted mt-1.5">
-          Cette information aide à personnaliser votre expérience.
+          {t('onboarding.gender.subtitle')}
         </p>
       </div>
 
@@ -50,7 +52,7 @@ export default function StepGender({ onNext }: StepGenderProps) {
                   : 'border-border-light bg-white hover:bg-grey-50 hover:border-grey-300'
               }`}
             >
-              <span className="text-3xl" role="img" aria-label={option.label}>
+              <span className="text-3xl" role="img" aria-label={t(option.labelKey)}>
                 {option.emoji}
               </span>
               <span
@@ -58,7 +60,7 @@ export default function StepGender({ onNext }: StepGenderProps) {
                   isSelected ? 'text-primary-700' : 'text-grey-600'
                 }`}
               >
-                {option.label}
+                {t(option.labelKey)}
               </span>
             </button>
           );
@@ -71,7 +73,7 @@ export default function StepGender({ onNext }: StepGenderProps) {
           disabled={!gender}
           className="w-full py-3.5 rounded-xl text-sm font-semibold bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] disabled:bg-grey-200 disabled:text-grey-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm"
         >
-          Continuer
+          {t('onboarding.continue')}
         </button>
       </div>
     </form>

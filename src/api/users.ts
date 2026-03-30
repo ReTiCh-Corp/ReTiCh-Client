@@ -6,6 +6,30 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  status: string;
+  custom_status?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  gender?: string | null;
+  phone?: string | null;
+  last_seen_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface UpdateProfileInput {
+  username: string;
+  status: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  gender?: string | null;
+  custom_status?: string | null;
+  display_name?: string | null;
 }
 
 export interface ListUsersParams {

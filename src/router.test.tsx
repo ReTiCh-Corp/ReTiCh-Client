@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import i18n from './i18n';
 import { routes } from './router';
 
 vi.mock('@retish/auth', () => ({
@@ -82,16 +83,16 @@ function renderRoute(initialRoute: string) {
 describe('Router', () => {
   it('renders the Login page on /login', () => {
     renderRoute('/login');
-    expect(screen.getByText('Bienvenue sur ReTiCh')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('login.welcome'))).toBeInTheDocument();
   });
 
   it('renders the Chat page on /chat', () => {
     renderRoute('/chat');
-    expect(screen.getByText('Messages')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
   });
 
   it('renders the Settings page on /settings', () => {
     renderRoute('/settings');
-    expect(screen.getAllByText('Settings').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(i18n.t('settings.title')).length).toBeGreaterThanOrEqual(1);
   });
 });

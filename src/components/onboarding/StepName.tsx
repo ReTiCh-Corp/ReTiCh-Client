@@ -1,5 +1,6 @@
 import { User } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
 
 interface StepNameProps {
@@ -7,6 +8,7 @@ interface StepNameProps {
 }
 
 export default function StepName({ onNext }: StepNameProps) {
+  const { t } = useTranslation();
   const { firstName, lastName, setField } = useOnboardingStore();
   const [touched, setTouched] = useState({ firstName: false, lastName: false });
 
@@ -24,10 +26,10 @@ export default function StepName({ onNext }: StepNameProps) {
     <form onSubmit={handleSubmit} className="flex flex-col flex-1">
       <div className="mt-8 mb-2">
         <h1 className="font-display font-bold text-2xl text-text leading-tight">
-          Comment vous appelez-vous ?
+          {t('onboarding.name.title')}
         </h1>
         <p className="text-sm text-text-muted mt-1.5">
-          Les autres membres verront votre nom dans les conversations.
+          {t('onboarding.name.subtitle')}
         </p>
       </div>
 
@@ -37,7 +39,7 @@ export default function StepName({ onNext }: StepNameProps) {
             htmlFor="firstName"
             className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5"
           >
-            Prénom
+            {t('profile.firstName')}
           </label>
           <div className="relative">
             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
@@ -45,7 +47,7 @@ export default function StepName({ onNext }: StepNameProps) {
               id="firstName"
               type="text"
               autoComplete="given-name"
-              placeholder="Votre prénom"
+              placeholder={t('profile.firstNamePlaceholder')}
               value={firstName}
               onChange={(e) => setField('firstName', e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, firstName: true }))}
@@ -54,7 +56,7 @@ export default function StepName({ onNext }: StepNameProps) {
           </div>
           {touched.firstName && !firstNameValid && firstName !== '' && (
             <p className="text-xs text-red-500 mt-1.5">
-              Le prénom doit contenir au moins 2 caractères.
+              {t('onboarding.name.firstNameError')}
             </p>
           )}
         </div>
@@ -64,7 +66,7 @@ export default function StepName({ onNext }: StepNameProps) {
             htmlFor="lastName"
             className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5"
           >
-            Nom
+            {t('profile.lastName')}
           </label>
           <div className="relative">
             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
@@ -72,7 +74,7 @@ export default function StepName({ onNext }: StepNameProps) {
               id="lastName"
               type="text"
               autoComplete="family-name"
-              placeholder="Votre nom"
+              placeholder={t('profile.lastNamePlaceholder')}
               value={lastName}
               onChange={(e) => setField('lastName', e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, lastName: true }))}
@@ -81,7 +83,7 @@ export default function StepName({ onNext }: StepNameProps) {
           </div>
           {touched.lastName && !lastNameValid && lastName !== '' && (
             <p className="text-xs text-red-500 mt-1.5">
-              Le nom doit contenir au moins 2 caractères.
+              {t('onboarding.name.lastNameError')}
             </p>
           )}
         </div>
@@ -93,7 +95,7 @@ export default function StepName({ onNext }: StepNameProps) {
           disabled={!isValid}
           className="w-full py-3.5 rounded-xl text-sm font-semibold bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.98] disabled:bg-grey-200 disabled:text-grey-400 disabled:cursor-not-allowed transition-all duration-150 shadow-sm"
         >
-          Continuer
+          {t('onboarding.continue')}
         </button>
       </div>
     </form>

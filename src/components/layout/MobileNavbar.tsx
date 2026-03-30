@@ -1,20 +1,21 @@
 import { MessageSquare, Settings, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const navItems = [
   {
     path: '/chat',
-    label: 'Chats',
+    labelKey: 'nav.chats',
     icon: <MessageSquare size={22} />,
   },
   {
     path: '/settings',
-    label: 'Settings',
+    labelKey: 'nav.settings',
     icon: <Settings size={22} />,
   },
   {
     path: '/profile',
-    label: 'Profile',
+    labelKey: 'nav.profile',
     icon: <User size={22} />,
   },
 ];
@@ -22,9 +23,10 @@ const navItems = [
 export default function MobileNavbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-t border-border safe-area-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-lg border-t border-border safe-area-bottom">
       <div className="flex items-stretch justify-around h-16">
         {navItems.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
@@ -46,7 +48,7 @@ export default function MobileNavbar() {
               <span
                 className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-primary-600' : 'text-grey-400'}`}
               >
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </button>
           );

@@ -1,5 +1,7 @@
-import { Loader2, Plus, Search } from 'lucide-react';
+import { Loader2, MessageSquare, Plus, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { Conversation } from '../../api/conversations';
 import { useConversations } from '../../hooks/useConversations';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -16,7 +18,7 @@ function getInitials(name: string | null): string {
     .slice(0, 2);
 }
 
-function formatTime(dateStr: string | null): string {
+function formatTime(dateStr: string | null, t: TFunction): string {
   if (!dateStr) return '';
   const date = new Date(dateStr);
   const now = new Date();
@@ -26,8 +28,8 @@ function formatTime(dateStr: string | null): string {
   if (diffDays === 0) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays === 1) return t('chat.yesterday');
+  if (diffDays < 7) return t('chat.daysAgo', { count: diffDays });
   return date.toLocaleDateString();
 }
 
@@ -40,6 +42,7 @@ export default function ConversationList({
   selectedId,
   onSelect,
 }: ConversationListProps) {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
   const modalTimeout = useRef<ReturnType<typeof setTimeout>>();
@@ -72,11 +75,11 @@ export default function ConversationList({
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full md:w-[320px] md:min-w-[320px] border-r border-border bg-white">
+    <div className="flex flex-col h-full w-full md:w-[320px] md:min-w-[320px] border-r border-border bg-surface">
       {/* Header */}
       <div className="px-5 pt-5 pb-3">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-display font-bold text-text">Messages</h2>
+          <h2 className="text-xl font-display font-bold text-text">{t('chat.messages')}</h2>
           <button
             type="button"
             onClick={() => setShowModal(true)}
@@ -93,7 +96,7 @@ export default function ConversationList({
           />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder={t('chat.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
@@ -110,8 +113,28 @@ export default function ConversationList({
         )}
         {error && (
           <p className="text-sm text-red-500 text-center py-4">
-            Failed to load conversations
+            {t('chat.loadError')}
           </p>
+        )}
+        {!isLoading && !error && conversations.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 px-6 animate-empty-fade-in">
+            <div className="w-14 h-14 rounded-2xl bg-primary-100 flex items-center justify-center mb-4">
+              <MessageSquare size={26} strokeWidth={1.5} className="text-primary-500" />
+            </div>
+            <h3 className="font-display font-bold text-base text-text mb-1">
+              {t('chat.noConversations')}
+            </h3>
+            <p className="text-sm text-text-muted text-center mb-5">
+              {t('chat.noConversationsHint')}
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-colors cursor-pointer"
+            >
+              {t('chat.newConversation')}
+            </button>
+          </div>
         )}
         {conversations.map((conv) => (
           <button
@@ -149,10 +172,10 @@ export default function ConversationList({
                 <span
                   className={`text-sm font-semibold truncate ${selectedId === conv.id ? 'text-primary-900' : 'text-text'}`}
                 >
-                  {conv.name ?? 'Direct message'}
+                  {conv.name ?? t('chat.directMessage')}
                 </span>
                 <span className="text-[11px] text-grey-400 shrink-0 ml-2">
-                  {formatTime(conv.last_message_at ?? conv.created_at)}
+                  {formatTime(conv.last_message_at ?? conv.created_at, t)}
                 </span>
               </div>
               <p className="text-xs text-text-muted truncate">

@@ -1,9 +1,11 @@
 import { LogIn, MessageSquare, Shield } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AuthBrandPanel from '../components/auth/AuthBrandPanel';
 import { useAuth } from "@retish/auth/react"
 
 export default function Login() {
+  const { t } = useTranslation();
   const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +17,7 @@ export default function Login() {
       await signIn();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Une erreur est survenue.',
+        err instanceof Error ? err.message : t('login.error'),
       );
       setIsLoading(false);
     }
@@ -33,18 +35,17 @@ export default function Login() {
               <MessageSquare className="w-4.5 h-4.5 text-primary-600" />
             </div>
             <span className="font-display font-bold text-lg text-text">
-              ReTiCh
+              {t('login.brand')}
             </span>
           </div>
 
           {/* Heading */}
           <div className="mb-10">
             <h1 className="font-display font-bold text-3xl text-text leading-tight">
-              Bienvenue sur ReTiCh
+              {t('login.welcome')}
             </h1>
             <p className="text-sm text-text-muted mt-2 leading-relaxed">
-              Connectez-vous via Reddish pour accéder à vos conversations en
-              temps réel.
+              {t('login.subtitle')}
             </p>
           </div>
 
@@ -56,11 +57,10 @@ export default function Login() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-text">
-                  Authentification centralisée
+                  {t('login.centralAuth')}
                 </p>
                 <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
-                  Votre compte est géré par Reddish. Cliquez ci-dessous pour
-                  vous connecter ou créer un compte.
+                  {t('login.centralAuthDesc')}
                 </p>
               </div>
             </div>
@@ -80,12 +80,12 @@ export default function Login() {
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Redirection…
+                  {t('login.redirecting')}
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <LogIn className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-                  Se connecter avec Reddish
+                  {t('login.signIn')}
                 </span>
               )}
             </button>
@@ -93,8 +93,7 @@ export default function Login() {
 
           {/* Footer hint */}
           <p className="text-center text-xs text-text-light mt-8">
-            Pas encore de compte ? Il sera créé automatiquement lors de votre
-            première connexion via Reddish.
+            {t('login.noAccount')}
           </p>
         </div>
       </div>

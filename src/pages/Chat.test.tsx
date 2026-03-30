@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
+import i18n from '../i18n';
 import Chat from './Chat';
 
 vi.mock('../hooks/useConversations', () => ({
@@ -88,7 +89,7 @@ function createWrapper() {
 describe('Chat', () => {
   it('renders conversation list and chat area', () => {
     render(<Chat />, { wrapper: createWrapper() });
-    expect(screen.getByText('Messages')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
   });
 
   it('selects a conversation and shows details panel', async () => {
@@ -130,9 +131,9 @@ describe('Chat', () => {
 
     await user.click(screen.getAllByText('Adriana Hawk')[0]);
 
-    const backButton = screen.getByLabelText('Back');
+    const backButton = screen.getByLabelText(i18n.t('chat.back'));
     await user.click(backButton);
 
-    expect(screen.getByText('Messages')).toBeInTheDocument();
+    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
   });
 });

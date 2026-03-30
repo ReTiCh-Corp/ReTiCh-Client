@@ -8,6 +8,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import type { User } from '../../api/users';
 import { ApiError } from '../../api/client';
@@ -29,11 +30,11 @@ function getInitials(name: string): string {
 const TYPE_OPTIONS: {
   type: ConversationType;
   icon: typeof MessageSquare;
-  label: string;
+  labelKey: string;
 }[] = [
-  { type: 'direct', icon: MessageSquare, label: 'Direct' },
-  { type: 'group', icon: Users, label: 'Group' },
-  { type: 'channel', icon: Hash, label: 'Channel' },
+  { type: 'direct', icon: MessageSquare, labelKey: 'chat.modal.direct' },
+  { type: 'group', icon: Users, labelKey: 'chat.modal.group' },
+  { type: 'channel', icon: Hash, labelKey: 'chat.modal.channel' },
 ];
 
 interface ConversationModalCreationProps {
@@ -47,6 +48,7 @@ export default function ConversationModalCreation({
   isClosing,
   onConversationCreated,
 }: ConversationModalCreationProps) {
+  const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState<ConversationType | null>(
     null,
   );
@@ -120,7 +122,7 @@ export default function ConversationModalCreation({
         onClose();
       } else {
         setErrorMessage(
-          err instanceof Error ? err.message : 'An error occurred',
+          err instanceof Error ? err.message : t('chat.modal.error'),
         );
       }
     }
@@ -143,15 +145,15 @@ export default function ConversationModalCreation({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="New conversation"
-          className={`pointer-events-auto max-w-md w-full rounded-2xl bg-white shadow-xl max-h-[85vh] flex flex-col overflow-hidden ${
+          aria-label={t('chat.modal.title')}
+          className={`pointer-events-auto max-w-md w-full rounded-2xl bg-surface shadow-xl max-h-[85vh] flex flex-col overflow-hidden ${
             isClosing ? 'animate-modal-out' : 'animate-modal-in'
           }`}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border-light">
             <h3 className="text-lg font-display font-bold text-text">
-              New conversation
+              {t('chat.modal.title')}
             </h3>
             <button
               type="button"
@@ -167,10 +169,10 @@ export default function ConversationModalCreation({
             {/* Type Selector */}
             <div className="px-6 pt-5 pb-4">
               <span className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3 block">
-                Type
+                {t('chat.modal.type')}
               </span>
               <div className="grid grid-cols-3 gap-3">
-                {TYPE_OPTIONS.map(({ type, icon: Icon, label }) => {
+                {TYPE_OPTIONS.map(({ type, icon: Icon, labelKey }) => {
                   const isActive = selectedType === type;
                   return (
                     <button
@@ -191,7 +193,7 @@ export default function ConversationModalCreation({
                       }`}
                     >
                       <Icon size={22} />
-                      <span className="text-xs font-medium">{label}</span>
+                      <span className="text-xs font-medium">{t(labelKey)}</span>
                     </button>
                   );
                 })}
@@ -202,7 +204,7 @@ export default function ConversationModalCreation({
             {needsName && (
               <div className="px-6 pb-4">
                 <span className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3 block">
-                  Name
+                  {t('chat.modal.name')}
                 </span>
                 <input
                   type="text"
@@ -210,8 +212,8 @@ export default function ConversationModalCreation({
                   onChange={(e) => setConversationName(e.target.value)}
                   placeholder={
                     selectedType === 'group'
-                      ? 'Group name...'
-                      : 'Channel name...'
+                      ? t('chat.modal.groupPlaceholder')
+                      : t('chat.modal.channelPlaceholder')
                   }
                   className="w-full px-4 py-2.5 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
@@ -221,7 +223,7 @@ export default function ConversationModalCreation({
             {/* Member Selection */}
             <div className="px-6 pb-4">
               <span className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3 block">
-                Members
+                {t('chat.modal.members')}
               </span>
 
               {/* Search */}
@@ -232,7 +234,7 @@ export default function ConversationModalCreation({
                 />
                 <input
                   type="text"
-                  placeholder="Search members..."
+                  placeholder={t('chat.modal.searchMembers')}
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
@@ -296,7 +298,7 @@ export default function ConversationModalCreation({
                 )}
                 {!isLoading && filteredMembers.length === 0 && (
                   <p className="text-sm text-grey-400 text-center py-4">
-                    No members found
+                    {t('chat.modal.noMembers')}
                   </p>
                 )}
               </div>
@@ -318,7 +320,7 @@ export default function ConversationModalCreation({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-grey-600 hover:bg-grey-100 transition-colors cursor-pointer"
             >
-              Cancel
+              {t('chat.modal.cancel')}
             </button>
             <button
               type="button"
@@ -330,7 +332,7 @@ export default function ConversationModalCreation({
                   : 'bg-primary-300 text-white cursor-not-allowed'
               }`}
             >
-              {createMutation.isPending ? 'Creating...' : 'Create'}
+              {createMutation.isPending ? t('chat.modal.creating') : t('chat.modal.create')}
             </button>
           </div>
         </div>

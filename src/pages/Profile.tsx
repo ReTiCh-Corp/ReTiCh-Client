@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Pencil,
   Phone,
@@ -11,22 +12,29 @@ import {
 import { useMyProfile } from '../hooks/useProfile';
 import { useAuthStore } from '../stores/useAuthStore';
 
-const STATUS_CONFIG: Record<string, { color: string; ring: string; label: string }> = {
-  online: { color: 'bg-leaf-500', ring: 'ring-leaf-200', label: 'En ligne' },
-  away: { color: 'bg-amber-400', ring: 'ring-amber-100', label: 'Absent' },
-  busy: { color: 'bg-red-500', ring: 'ring-red-200', label: 'Occupé' },
-  offline: { color: 'bg-grey-300', ring: 'ring-grey-100', label: 'Hors ligne' },
-  invisible: { color: 'bg-grey-300', ring: 'ring-grey-100', label: 'Invisible' },
+const STATUS_CONFIG: Record<string, { color: string; ring: string; labelKey: string }> = {
+  online: { color: 'bg-leaf-500', ring: 'ring-leaf-200', labelKey: 'profile.online' },
+  away: { color: 'bg-amber-400', ring: 'ring-amber-100', labelKey: 'profile.away' },
+  busy: { color: 'bg-red-500', ring: 'ring-red-200', labelKey: 'profile.busy' },
+  offline: { color: 'bg-grey-300', ring: 'ring-grey-100', labelKey: 'profile.offline' },
+  invisible: { color: 'bg-grey-300', ring: 'ring-grey-100', labelKey: 'profile.invisible' },
 };
 
-const GENDER_LABELS: Record<string, string> = {
-  male: 'Homme',
-  female: 'Femme',
-  other: 'Autre',
+const GENDER_LABEL_KEYS: Record<string, string> = {
+  male: 'profile.male',
+  female: 'profile.female',
+  other: 'profile.other',
 };
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('fr-FR', {
+const LOCALE_MAP: Record<string, string> = {
+  fr: 'fr-FR',
+  en: 'en-US',
+  ja: 'ja-JP',
+};
+
+function formatDate(iso: string, language: string) {
+  const locale = LOCALE_MAP[language] ?? 'fr-FR';
+  return new Intl.DateTimeFormat(locale, {
     month: 'long',
     year: 'numeric',
   }).format(new Date(iso));
@@ -42,14 +50,12 @@ function getInitials(firstName: string | null, lastName: string | null, username
 function ProfileSkeleton() {
   return (
     <div className="flex flex-col items-center h-full bg-surface-alt animate-pulse">
-      {/* Hero skeleton */}
       <div className="w-full bg-gradient-to-b from-primary-50 to-surface-alt pt-10 pb-8 flex flex-col items-center">
         <div className="w-28 h-28 rounded-full bg-grey-200" />
         <div className="mt-4 h-7 w-40 rounded-lg bg-grey-200" />
         <div className="mt-2 h-4 w-24 rounded-md bg-grey-200" />
         <div className="mt-4 h-5 w-20 rounded-full bg-grey-200" />
       </div>
-      {/* Cards skeleton */}
       <div className="w-full max-w-md px-5 mt-4 space-y-3">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="bg-surface rounded-xl border border-border-light p-4">
@@ -63,6 +69,7 @@ function ProfileSkeleton() {
 }
 
 export default function Profile() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { data: profile, isLoading, isError } = useMyProfile();
   const email = useAuthStore((s) => s.user?.email);
@@ -76,13 +83,13 @@ export default function Profile() {
           <User className="w-7 h-7 text-primary-400" />
         </div>
         <p className="text-text-muted text-sm text-center">
-          Impossible de charger le profil.
+          {t('profile.loadError')}
         </p>
         <button
           onClick={() => window.location.reload()}
           className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
         >
-          Réessayer
+          {t('profile.retry')}
         </button>
       </div>
     );
@@ -92,39 +99,39 @@ export default function Profile() {
   const displayName =
     profile.first_name || profile.last_name
       ? [profile.first_name, profile.last_name].filter(Boolean).join(' ')
-      : profile.display_name ?? profile.username ?? 'Utilisateur';
-  const initials = getInitials(profile.first_name, profile.last_name, profile.username);
+      : profile.display_name ?? profile.username ?? t('profile.defaultName');
+  const initials = getInitials(profile.first_name ?? null, profile.last_name ?? null, profile.username ?? null);
 
   const infoRows = [
     profile.bio && {
       icon: <MessageCircle className="w-[18px] h-[18px]" />,
-      label: 'Bio',
+      label: t('profile.bio'),
       value: profile.bio,
     },
     profile.custom_status && {
       icon: <SmilePlus className="w-[18px] h-[18px]" />,
-      label: 'Statut',
+      label: t('profile.status'),
       value: profile.custom_status,
     },
     profile.phone && {
       icon: <Phone className="w-[18px] h-[18px]" />,
-      label: 'Téléphone',
+      label: t('profile.phone'),
       value: profile.phone,
     },
     email && {
       icon: <Mail className="w-[18px] h-[18px]" />,
-      label: 'Email',
+      label: t('profile.email'),
       value: email,
     },
     profile.gender && {
       icon: <User className="w-[18px] h-[18px]" />,
-      label: 'Genre',
-      value: GENDER_LABELS[profile.gender] ?? profile.gender,
+      label: t('profile.gender'),
+      value: GENDER_LABEL_KEYS[profile.gender] ? t(GENDER_LABEL_KEYS[profile.gender]) : profile.gender,
     },
     profile.created_at && {
       icon: <Calendar className="w-[18px] h-[18px]" />,
-      label: 'Membre depuis',
-      value: formatDate(profile.created_at),
+      label: t('profile.memberSince'),
+      value: formatDate(profile.created_at, i18n.language),
     },
   ].filter(Boolean) as { icon: React.ReactNode; label: string; value: string }[];
 
@@ -150,25 +157,22 @@ export default function Profile() {
           {/* Status dot */}
           <div
             className={`absolute bottom-1 right-1 w-6 h-6 rounded-full ${statusCfg.color} ring-[3px] ${statusCfg.ring} border-[3px] border-surface`}
-            title={statusCfg.label}
+            title={t(statusCfg.labelKey)}
           />
         </div>
 
-        {/* Name & username */}
-        <h2 className="mt-4 font-display font-bold text-2xl text-text leading-tight">
+        <h2 className="mt-4 font-display font-bold text-2xl text-text">
           {displayName}
         </h2>
-        {profile.username && (
-          <p className="mt-0.5 text-sm text-text-muted font-semibold">
-            @{profile.username}
-          </p>
-        )}
+        <p className="mt-0.5 text-sm text-text-muted">
+          @{profile.username}
+        </p>
 
         {/* Status badge */}
         <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface/70 backdrop-blur-sm border border-border-light shadow-sm">
           <span className={`w-2 h-2 rounded-full ${statusCfg.color}`} />
           <span className="text-xs font-semibold text-text-muted">
-            {statusCfg.label}
+            {t(statusCfg.labelKey)}
           </span>
         </div>
       </div>
@@ -180,7 +184,7 @@ export default function Profile() {
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary-600 text-white font-semibold text-sm hover:bg-primary-700 active:scale-[0.98] transition-all shadow-sm"
         >
           <Pencil className="w-4 h-4" />
-          Modifier le profil
+          {t('profile.edit')}
         </button>
       </div>
 

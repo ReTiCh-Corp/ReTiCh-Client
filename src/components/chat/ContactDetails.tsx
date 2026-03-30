@@ -54,7 +54,7 @@ export default function ContactDetails({
 
   if (isLoading) {
     return (
-      <div className="w-[280px] min-w-[280px] h-full border-l border-border bg-white flex items-center justify-center">
+      <div className="w-[280px] min-w-[280px] h-full border-l border-border bg-surface flex items-center justify-center">
         <Loader2 size={24} className="animate-spin text-grey-400" />
       </div>
     );
@@ -120,7 +120,7 @@ export default function ContactDetails({
   };
 
   return (
-    <div className="w-[280px] min-w-[280px] h-full border-l border-border bg-white flex flex-col overflow-y-auto">
+    <div className="w-[280px] min-w-[280px] h-full border-l border-border bg-surface flex flex-col overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <span className="text-xs font-semibold text-grey-500 uppercase tracking-wider">

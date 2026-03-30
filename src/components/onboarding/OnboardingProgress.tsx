@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface OnboardingProgressProps {
   currentStep: number;
   totalSteps: number;
@@ -7,13 +9,14 @@ export default function OnboardingProgress({
   currentStep,
   totalSteps,
 }: OnboardingProgressProps) {
+  const { t } = useTranslation();
   const progress = (currentStep / totalSteps) * 100;
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold text-text-muted tracking-wide uppercase">
-          Étape {currentStep} sur {totalSteps}
+          {t('onboarding.stepProgress', { current: currentStep, total: totalSteps })}
         </span>
         <span className="text-xs font-bold text-primary-500">
           {Math.round(progress)}%

@@ -1,13 +1,15 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { updateProfile, type UpdateProfilePayload } from '../api/auth';
+import { updateProfile, completeOnboardingAPI, type UpdateProfilePayload } from '../api/auth';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useOnboardingStore } from '../stores/useOnboardingStore';
-import { STATUS_MAP } from '../components/onboarding/StepStatus';
+import { STATUS_PRESETS } from '../components/onboarding/StepStatus';
 
 const TOTAL_STEPS = 6;
 
 export function useOnboardingStepper() {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -31,11 +33,15 @@ export function useOnboardingStepper() {
       };
       if (onboardingStore.phone) payload.phone = onboardingStore.phone;
       if (onboardingStore.status) {
-        payload.status = STATUS_MAP[onboardingStore.status] ?? 'online';
+        const matchedPreset = STATUS_PRESETS.find(
+          (p) => t(p.labelKey) === onboardingStore.status,
+        );
+        payload.status = matchedPreset?.userStatus ?? 'online';
         payload.custom_status = onboardingStore.status;
       }
 
       await updateProfile(payload);
+      await completeOnboardingAPI();
 
       completeOnboarding();
       onboardingStore.reset();

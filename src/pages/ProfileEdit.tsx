@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   User,
@@ -15,17 +16,17 @@ import { useMyProfile, useUpdateMyProfile } from '../hooks/useProfile';
 import type { UpdateProfileInput } from '../api/users';
 
 const GENDER_OPTIONS = [
-  { value: '', label: 'Non spécifié' },
-  { value: 'male', label: 'Homme' },
-  { value: 'female', label: 'Femme' },
-  { value: 'other', label: 'Autre' },
+  { value: '', labelKey: 'profile.unspecified' },
+  { value: 'male', labelKey: 'profile.male' },
+  { value: 'female', labelKey: 'profile.female' },
+  { value: 'other', labelKey: 'profile.other' },
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'online', label: 'En ligne', color: 'bg-leaf-500' },
-  { value: 'away', label: 'Absent', color: 'bg-amber-400' },
-  { value: 'busy', label: 'Occupé', color: 'bg-red-500' },
-  { value: 'offline', label: 'Hors ligne', color: 'bg-grey-300' },
+  { value: 'online', labelKey: 'profile.online', color: 'bg-leaf-500' },
+  { value: 'away', labelKey: 'profile.away', color: 'bg-amber-400' },
+  { value: 'busy', labelKey: 'profile.busy', color: 'bg-red-500' },
+  { value: 'offline', labelKey: 'profile.offline', color: 'bg-grey-300' },
 ];
 
 function getInitials(firstName: string, lastName: string, username: string) {
@@ -58,6 +59,7 @@ function EditSkeleton() {
 }
 
 export default function ProfileEdit() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: profile, isLoading, isError } = useMyProfile();
   const updateProfile = useUpdateMyProfile();
@@ -73,7 +75,7 @@ export default function ProfileEdit() {
     status: 'online',
   });
 
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [, setTouched] = useState<Record<string, boolean>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -100,13 +102,13 @@ export default function ProfileEdit() {
           <AlertCircle className="w-7 h-7 text-primary-400" />
         </div>
         <p className="text-text-muted text-sm text-center">
-          Impossible de charger le profil.
+          {t('profile.loadError')}
         </p>
         <button
           onClick={() => navigate('/profile')}
           className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
         >
-          Retour au profil
+          {t('profile.backToProfile')}
         </button>
       </div>
     );
@@ -149,7 +151,7 @@ export default function ProfileEdit() {
       await updateProfile.mutateAsync(input);
       navigate('/profile');
     } catch {
-      setSubmitError('Une erreur est survenue lors de la sauvegarde.');
+      setSubmitError(t('profile.saveError'));
     }
   };
 
@@ -168,7 +170,7 @@ export default function ProfileEdit() {
             <ArrowLeft className="w-[18px] h-[18px] text-text" />
           </button>
           <h1 className="font-display font-bold text-lg text-text">
-            Modifier le profil
+            {t('profile.edit')}
           </h1>
           <div className="w-9" />
         </div>
@@ -206,13 +208,13 @@ export default function ProfileEdit() {
           {/* ── Section: Identité ── */}
           <div className="bg-surface rounded-xl border border-border-light p-4 space-y-4">
             <h2 className="text-xs font-bold text-text-light uppercase tracking-wider">
-              Identité
+              {t('profile.identity')}
             </h2>
 
             {/* Prénom */}
             <div>
               <label htmlFor="first_name" className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5">
-                Prénom
+                {t('profile.firstName')}
               </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
@@ -220,7 +222,7 @@ export default function ProfileEdit() {
                   id="first_name"
                   type="text"
                   autoComplete="given-name"
-                  placeholder="Votre prénom"
+                  placeholder={t('profile.firstNamePlaceholder')}
                   value={form.first_name}
                   onChange={(e) => handleChange('first_name', e.target.value)}
                   onBlur={() => handleBlur('first_name')}
@@ -232,7 +234,7 @@ export default function ProfileEdit() {
             {/* Nom */}
             <div>
               <label htmlFor="last_name" className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5">
-                Nom
+                {t('profile.lastName')}
               </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
@@ -240,7 +242,7 @@ export default function ProfileEdit() {
                   id="last_name"
                   type="text"
                   autoComplete="family-name"
-                  placeholder="Votre nom"
+                  placeholder={t('profile.lastNamePlaceholder')}
                   value={form.last_name}
                   onChange={(e) => handleChange('last_name', e.target.value)}
                   onBlur={() => handleBlur('last_name')}
@@ -252,7 +254,7 @@ export default function ProfileEdit() {
             {/* Username (read-only) */}
             <div>
               <label htmlFor="username" className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5">
-                Nom d'utilisateur
+                {t('profile.username')}
               </label>
               <div className="relative">
                 <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
@@ -265,14 +267,14 @@ export default function ProfileEdit() {
                 />
               </div>
               <p className="text-xs text-text-light mt-1.5">
-                Le nom d'utilisateur ne peut pas être modifié.
+                {t('profile.usernameReadonly')}
               </p>
             </div>
 
             {/* Genre */}
             <div>
               <label htmlFor="gender" className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5">
-                Genre
+                {t('profile.gender')}
               </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
@@ -284,7 +286,7 @@ export default function ProfileEdit() {
                 >
                   {GENDER_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -296,13 +298,13 @@ export default function ProfileEdit() {
           {/* ── Section: Contact ── */}
           <div className="bg-surface rounded-xl border border-border-light p-4 space-y-4">
             <h2 className="text-xs font-bold text-text-light uppercase tracking-wider">
-              Contact
+              {t('profile.contact')}
             </h2>
 
             {/* Téléphone */}
             <div>
               <label htmlFor="phone" className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5">
-                Téléphone
+                {t('profile.phone')}
               </label>
               <div className="relative">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
@@ -310,7 +312,7 @@ export default function ProfileEdit() {
                   id="phone"
                   type="tel"
                   autoComplete="tel"
-                  placeholder="+33 6 12 34 56 78"
+                  placeholder={t('profile.phonePlaceholder')}
                   value={form.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
@@ -322,19 +324,19 @@ export default function ProfileEdit() {
           {/* ── Section: À propos ── */}
           <div className="bg-surface rounded-xl border border-border-light p-4 space-y-4">
             <h2 className="text-xs font-bold text-text-light uppercase tracking-wider">
-              À propos
+              {t('profile.about')}
             </h2>
 
             {/* Bio */}
             <div>
               <label htmlFor="bio" className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5">
-                Bio
+                {t('profile.bio')}
               </label>
               <div className="relative">
                 <MessageCircle className="absolute left-3.5 top-3.5 w-4 h-4 text-grey-400 pointer-events-none" />
                 <textarea
                   id="bio"
-                  placeholder="Parlez de vous…"
+                  placeholder={t('profile.bioPlaceholder')}
                   maxLength={200}
                   rows={3}
                   value={form.bio}
@@ -350,14 +352,14 @@ export default function ProfileEdit() {
             {/* Statut personnalisé */}
             <div>
               <label htmlFor="custom_status" className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5">
-                Statut personnalisé
+                {t('profile.customStatus')}
               </label>
               <div className="relative">
                 <SmilePlus className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-400 pointer-events-none" />
                 <input
                   id="custom_status"
                   type="text"
-                  placeholder="Quoi de neuf ?"
+                  placeholder={t('profile.statusPlaceholder')}
                   maxLength={100}
                   value={form.custom_status}
                   onChange={(e) => handleChange('custom_status', e.target.value)}
@@ -370,7 +372,7 @@ export default function ProfileEdit() {
           {/* ── Section: Disponibilité ── */}
           <div className="bg-surface rounded-xl border border-border-light p-4 space-y-3">
             <h2 className="text-xs font-bold text-text-light uppercase tracking-wider">
-              Disponibilité
+              {t('profile.availability')}
             </h2>
             <div className="grid grid-cols-2 gap-2">
               {STATUS_OPTIONS.map((opt) => {
@@ -392,7 +394,7 @@ export default function ProfileEdit() {
                         isSelected ? 'text-primary-700' : 'text-grey-600'
                       }`}
                     >
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </span>
                     {isSelected && (
                       <Check className="w-3.5 h-3.5 text-primary-600 ml-auto" />
@@ -413,10 +415,10 @@ export default function ProfileEdit() {
               {updateProfile.isPending ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Sauvegarde…
+                  {t('profile.saving')}
                 </span>
               ) : (
-                'Enregistrer les modifications'
+                t('profile.saveChanges')
               )}
             </button>
           </div>

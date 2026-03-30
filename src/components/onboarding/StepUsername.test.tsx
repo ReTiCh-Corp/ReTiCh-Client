@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import i18n from '../../i18n';
 import { checkUsernameAvailability } from '../../api/users';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
 import StepUsername from './StepUsername';
@@ -26,14 +27,14 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText('mon_pseudo');
+    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
     await userEvent.type(input, 'valid_user');
 
     // Advance past debounce
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText('@valid_user est disponible !')).toBeInTheDocument();
+      expect(screen.getByText(i18n.t('onboarding.username.available', { username: 'valid_user' }))).toBeInTheDocument();
     });
 
     expect(mockedCheck).toHaveBeenCalledWith('valid_user');
@@ -44,13 +45,13 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText('mon_pseudo');
+    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
     await userEvent.type(input, 'taken_user');
 
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText('@taken_user est déjà pris.')).toBeInTheDocument();
+      expect(screen.getByText(i18n.t('onboarding.username.taken', { username: 'taken_user' }))).toBeInTheDocument();
     });
   });
 
@@ -58,7 +59,7 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText('mon_pseudo');
+    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
     await userEvent.type(input, 'ab');
 
     vi.advanceTimersByTime(600);
@@ -71,7 +72,7 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText('mon_pseudo');
+    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
     await userEvent.type(input, 'abc');
 
     // Not enough time elapsed — should not have been called yet
@@ -91,16 +92,16 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText('mon_pseudo');
+    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
     await userEvent.type(input, 'taken_user');
 
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText('@taken_user est déjà pris.')).toBeInTheDocument();
+      expect(screen.getByText(i18n.t('onboarding.username.taken', { username: 'taken_user' }))).toBeInTheDocument();
     });
 
-    const button = screen.getByRole('button', { name: 'Continuer' });
+    const button = screen.getByRole('button', { name: i18n.t('onboarding.continue') });
     expect(button).toBeDisabled();
   });
 
@@ -109,16 +110,16 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText('mon_pseudo');
+    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
     await userEvent.type(input, 'good_name');
 
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText('@good_name est disponible !')).toBeInTheDocument();
+      expect(screen.getByText(i18n.t('onboarding.username.available', { username: 'good_name' }))).toBeInTheDocument();
     });
 
-    const button = screen.getByRole('button', { name: 'Continuer' });
+    const button = screen.getByRole('button', { name: i18n.t('onboarding.continue') });
     expect(button).not.toBeDisabled();
     await userEvent.click(button);
     expect(onNext).toHaveBeenCalled();
