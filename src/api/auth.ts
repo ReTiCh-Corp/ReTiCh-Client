@@ -37,6 +37,8 @@ export interface UpdateProfilePayload {
   username: string;
   phone?: string;
   status?: string;
+  custom_status?: string;
+  display_name?: string | null;
 }
 
 export async function updateProfile(
@@ -45,5 +47,11 @@ export async function updateProfile(
   return apiClient<User>(USER_ENDPOINTS.ME, {
     method: 'PUT',
     body: payload,
+  });
+}
+
+export async function completeOnboardingAPI(): Promise<void> {
+  await apiClient(USER_ENDPOINTS.COMPLETE_ONBOARDING, {
+    method: 'PATCH',
   });
 }

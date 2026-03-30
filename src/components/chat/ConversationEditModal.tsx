@@ -66,7 +66,7 @@ export default function ConversationEditModal({
           role="dialog"
           aria-modal="true"
           aria-label="Edit conversation"
-          className={`pointer-events-auto max-w-md w-full rounded-2xl bg-white shadow-xl max-h-[85vh] flex flex-col overflow-hidden ${
+          className={`pointer-events-auto max-w-md w-full rounded-2xl bg-surface shadow-xl max-h-[85vh] flex flex-col overflow-hidden ${
             isClosing ? 'animate-modal-out' : 'animate-modal-in'
           }`}
         >

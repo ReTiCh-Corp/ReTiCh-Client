@@ -1,4 +1,5 @@
 import { MessageCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
 
 interface StepStatusProps {
@@ -7,11 +8,13 @@ interface StepStatusProps {
   isSubmitting: boolean;
 }
 
-const STATUS_SUGGESTIONS = [
-  'Disponible',
-  'Au travail',
-  'En vacances',
-  'Ne pas déranger',
+type UserStatus = 'online' | 'away' | 'busy' | 'offline';
+
+export const STATUS_PRESETS: { labelKey: string; userStatus: UserStatus }[] = [
+  { labelKey: 'onboarding.status.available', userStatus: 'online' },
+  { labelKey: 'onboarding.status.working', userStatus: 'busy' },
+  { labelKey: 'onboarding.status.vacation', userStatus: 'away' },
+  { labelKey: 'onboarding.status.dnd', userStatus: 'busy' },
 ];
 
 export default function StepStatus({
@@ -19,6 +22,7 @@ export default function StepStatus({
   onSkip,
   isSubmitting,
 }: StepStatusProps) {
+  const { t } = useTranslation();
   const { status, setField } = useOnboardingStore();
 
   const hasValue = status.trim().length > 0;
@@ -32,13 +36,13 @@ export default function StepStatus({
     <form onSubmit={handleSubmit} className="flex flex-col flex-1">
       <div className="mt-8 mb-2">
         <h1 className="font-display font-bold text-2xl text-text leading-tight">
-          Ajoutez un statut
+          {t('onboarding.status.title')}
         </h1>
         <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full bg-grey-100 text-xs font-medium text-text-muted">
-          Optionnel
+          {t('onboarding.optional')}
         </span>
         <p className="text-sm text-text-muted mt-2">
-          Dites aux autres ce que vous faites en ce moment.
+          {t('onboarding.status.subtitle')}
         </p>
       </div>
 
@@ -47,13 +51,13 @@ export default function StepStatus({
           htmlFor="status"
           className="block text-xs font-semibold text-grey-600 uppercase tracking-wider mb-1.5"
         >
-          Statut
+          {t('onboarding.status.label')}
         </label>
         <div className="relative">
           <MessageCircle className="absolute left-3.5 top-3.5 w-4 h-4 text-grey-400 pointer-events-none" />
           <textarea
             id="status"
-            placeholder="Quoi de neuf ?"
+            placeholder={t('onboarding.status.placeholder')}
             maxLength={100}
             rows={3}
             value={status}
@@ -67,20 +71,23 @@ export default function StepStatus({
 
         {/* Quick suggestions */}
         <div className="flex flex-wrap gap-2 mt-3">
-          {STATUS_SUGGESTIONS.map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => setField('status', suggestion)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
-                status === suggestion
-                  ? 'bg-primary-100 text-primary-700 border border-primary-200'
-                  : 'bg-grey-100 text-grey-600 border border-transparent hover:bg-grey-200'
-              }`}
-            >
-              {suggestion}
-            </button>
-          ))}
+          {STATUS_PRESETS.map((preset) => {
+            const label = t(preset.labelKey);
+            return (
+              <button
+                key={preset.labelKey}
+                type="button"
+                onClick={() => setField('status', label)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 ${
+                  status === label
+                    ? 'bg-primary-100 text-primary-700 border border-primary-200'
+                    : 'bg-grey-100 text-grey-600 border border-transparent hover:bg-grey-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -93,12 +100,12 @@ export default function StepStatus({
           {isSubmitting ? (
             <span className="flex items-center justify-center gap-2">
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Finalisation…
+              {t('onboarding.status.finishing')}
             </span>
           ) : hasValue ? (
-            'Terminer'
+            t('onboarding.status.finish')
           ) : (
-            'Terminer sans statut'
+            t('onboarding.status.finishWithout')
           )}
         </button>
         {!isSubmitting && (
@@ -107,7 +114,7 @@ export default function StepStatus({
             onClick={onSkip}
             className="w-full py-3 rounded-xl text-sm font-medium text-grey-500 hover:bg-grey-100 active:scale-[0.98] transition-all duration-150"
           >
-            Passer
+            {t('onboarding.skip')}
           </button>
         )}
       </div>
