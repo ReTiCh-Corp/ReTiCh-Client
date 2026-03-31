@@ -334,15 +334,13 @@ export default function ChatArea({
 }: ChatAreaProps) {
   const { t } = useTranslation();
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const {
-    editingMessage,
-    setEditingMessage,
-    replyingTo,
-    setReplyingTo,
-    getDraft,
-    setDraft,
-    clearDraft,
-  } = useMessageStore();
+  const editingMessage = useMessageStore((s) => s.editingMessage);
+  const replyingTo = useMessageStore((s) => s.replyingTo);
+  const setEditingMessage = useMessageStore((s) => s.setEditingMessage);
+  const setReplyingTo = useMessageStore((s) => s.setReplyingTo);
+  const draft = useMessageStore((s) => s.drafts[conversationId ?? ''] ?? '');
+  const setDraft = useMessageStore((s) => s.setDraft);
+  const clearDraft = useMessageStore((s) => s.clearDraft);
 
   const [inputValue, setInputValue] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -410,24 +408,23 @@ export default function ChatArea({
   const displayMessages = [...messages].reverse();
 
   // Auto mark conversation as read when messages load
+  // Use messages[0] (most recent, API returns DESC) to avoid depending on reversed array
+  const latestMessageId = messages[0]?.id;
   useEffect(() => {
-    if (conversationId && displayMessages.length > 0) {
-      const latestMessage = displayMessages[displayMessages.length - 1];
-      if (latestMessage.id !== lastReadIdRef.current) {
-        lastReadIdRef.current = latestMessage.id;
-        readReceiptMutation.mutate({
-          conversationId,
-          lastReadMessageId: latestMessage.id,
-        });
-      }
+    if (conversationId && latestMessageId && latestMessageId !== lastReadIdRef.current) {
+      lastReadIdRef.current = latestMessageId;
+      readReceiptMutation.mutate({
+        conversationId,
+        lastReadMessageId: latestMessageId,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId, displayMessages.length]);
+  }, [conversationId, latestMessageId]);
 
   // Restore draft when switching conversations
   useEffect(() => {
     if (conversationId && !editingMessage) {
-      setInputValue(getDraft(conversationId));
+      setInputValue(draft);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
@@ -487,7 +484,7 @@ export default function ChatArea({
         {
           onSuccess: () => {
             setEditingMessage(null);
-            setInputValue(getDraft(conversationId));
+            setInputValue(draft);
           },
         },
       );
@@ -534,7 +531,7 @@ export default function ChatArea({
     sendTypingStop,
     setEditingMessage,
     setReplyingTo,
-    getDraft,
+    draft,
     clearDraft,
   ]);
 
@@ -546,7 +543,7 @@ export default function ChatArea({
     if (e.key === 'Escape') {
       if (editingMessage) {
         setEditingMessage(null);
-        setInputValue(conversationId ? getDraft(conversationId) : '');
+        setInputValue(conversationId ? draft : '');
       } else if (replyingTo) {
         setReplyingTo(null);
       }
@@ -555,7 +552,7 @@ export default function ChatArea({
 
   const cancelEdit = () => {
     setEditingMessage(null);
-    setInputValue(conversationId ? getDraft(conversationId) : '');
+    setInputValue(conversationId ? draft : '');
   };
 
   if (!conversationId || !conversationName) {
