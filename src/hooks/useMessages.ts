@@ -9,6 +9,7 @@ import {
   type ListMessagesParams,
   listMessages,
   type Message,
+  searchMessages,
   type SendMessageInput,
   sendMessage,
   type UpdateMessageInput,
@@ -27,6 +28,8 @@ export const messageKeys = {
   lists: () => [...messageKeys.all, 'list'] as const,
   list: (conversationId: string, params?: ListMessagesParams) =>
     [...messageKeys.lists(), conversationId, params] as const,
+  search: (conversationId: string, query: string) =>
+    [...messageKeys.all, 'search', conversationId, query] as const,
 };
 
 export function useMessages(
@@ -130,5 +133,14 @@ export function useDeleteMessage() {
         queryKey: messageKeys.list(variables.conversationId),
       });
     },
+  });
+}
+
+export function useSearchMessages(conversationId: string, query: string) {
+  return useQuery({
+    queryKey: messageKeys.search(conversationId, query),
+    queryFn: () => searchMessages(conversationId, query, { limit: 50 }),
+    enabled: !!conversationId && query.length >= 2,
+    placeholderData: keepPreviousData,
   });
 }

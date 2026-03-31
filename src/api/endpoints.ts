@@ -44,4 +44,6 @@ export const MESSAGE_ENDPOINTS = {
     `/api/v1/messages/${messageId}/attachments`,
   MEDIA: (conversationId: string) =>
     `/api/v1/conversations/${conversationId}/media`,
+  SEARCH: (conversationId: string) =>
+    `/api/v1/conversations/${conversationId}/messages/search`,
 } as const;
