@@ -118,9 +118,29 @@ export function useWebSocket() {
           break;
         }
 
+        case 'reaction.added':
+        case 'reaction.removed':
+          // Invalidate reactions for the affected message
+          queryClient.invalidateQueries({
+            queryKey: ['reactions'],
+          });
+          break;
+
+        case 'read.updated':
+          queryClient.invalidateQueries({
+            queryKey: ['readReceipts', conversationId],
+          });
+          break;
+
+        case 'message.pinned':
+        case 'message.unpinned':
+          queryClient.invalidateQueries({
+            queryKey: ['pinnedMessages', conversationId],
+          });
+          break;
+
         case 'typing.start':
         case 'typing.stop':
-          // Typing indicators handled via separate state (Phase 4)
           break;
 
         default:

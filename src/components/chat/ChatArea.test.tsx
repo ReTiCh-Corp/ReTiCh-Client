@@ -58,8 +58,10 @@ vi.mock('../../stores/useMessageStore', () => ({
   useMessageStore: vi.fn((selector?: (s: unknown) => unknown) => {
     const state = {
       editingMessage: null,
+      replyingTo: null,
       drafts: {},
       setEditingMessage: vi.fn(),
+      setReplyingTo: vi.fn(),
       getDraft: () => '',
       setDraft: vi.fn(),
       clearDraft: vi.fn(),
@@ -67,6 +69,11 @@ vi.mock('../../stores/useMessageStore', () => ({
     if (typeof selector === 'function') return selector(state);
     return state;
   }),
+}));
+
+vi.mock('../../hooks/useSocial', () => ({
+  useAddReaction: () => ({ mutate: vi.fn(), isPending: false }),
+  useRemoveReaction: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 function createWrapper() {

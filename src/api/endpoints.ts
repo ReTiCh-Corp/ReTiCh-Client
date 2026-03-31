@@ -30,4 +30,13 @@ export const MESSAGE_ENDPOINTS = {
   SEND: (conversationId: string) =>
     `/api/v1/conversations/${conversationId}/messages`,
   BY_ID: (messageId: string) => `/api/v1/messages/${messageId}`,
+  REACTIONS: (messageId: string) => `/api/v1/messages/${messageId}/reactions`,
+  REACTION: (messageId: string, emoji: string) =>
+    `/api/v1/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+  READ_RECEIPTS: (conversationId: string) =>
+    `/api/v1/conversations/${conversationId}/read`,
+  PINS: (conversationId: string) =>
+    `/api/v1/conversations/${conversationId}/pins`,
+  PIN: (conversationId: string, messageId: string) =>
+    `/api/v1/conversations/${conversationId}/pins/${messageId}`,
 } as const;
