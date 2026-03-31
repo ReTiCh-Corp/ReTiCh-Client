@@ -81,7 +81,7 @@ function createWrapper() {
 describe('ChatArea', () => {
   it('shows placeholder when no conversation is selected', () => {
     render(
-      <ChatArea conversationId={null} conversationName={null} />,
+      <ChatArea conversationId={null} conversationName={null} wsStatus="connected" />,
       { wrapper: createWrapper() },
     );
     expect(
@@ -94,7 +94,7 @@ describe('ChatArea', () => {
 
   it('renders the conversation header with name and initials', () => {
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" />,
+      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
       { wrapper: createWrapper() },
     );
     expect(screen.getByText('Samantha Smith')).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe('ChatArea', () => {
 
   it('renders messages from the API', () => {
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" />,
+      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
       { wrapper: createWrapper() },
     );
     expect(screen.getByText('Hi, how are you?')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('ChatArea', () => {
 
   it('renders the input with placeholder containing first name', () => {
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" />,
+      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
       { wrapper: createWrapper() },
     );
     expect(
@@ -126,7 +126,7 @@ describe('ChatArea', () => {
   it('updates input value when typing', async () => {
     const user = userEvent.setup();
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" />,
+      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
       { wrapper: createWrapper() },
     );
 

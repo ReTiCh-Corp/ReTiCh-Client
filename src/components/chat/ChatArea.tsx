@@ -20,12 +20,14 @@ import {
   useSendMessage,
   useUpdateMessage,
 } from '../../hooks/useMessages';
+import type { WSStatus } from '../../hooks/useWebSocket';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useMessageStore } from '../../stores/useMessageStore';
 
 interface ChatAreaProps {
   conversationId: string | null;
   conversationName: string | null;
+  wsStatus?: WSStatus;
   onBack?: () => void;
 }
 
@@ -205,6 +207,7 @@ function MessageSkeleton() {
 export default function ChatArea({
   conversationId,
   conversationName,
+  wsStatus,
   onBack,
 }: ChatAreaProps) {
   const { t } = useTranslation();
@@ -359,9 +362,31 @@ export default function ChatArea({
             <h3 className="text-sm font-semibold text-text">
               {conversationName}
             </h3>
-            <span className="text-xs text-leaf-600 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-leaf-500 inline-block" />
-              {t('chat.online')}
+            <span
+              className={`text-xs flex items-center gap-1 ${
+                wsStatus === 'connected'
+                  ? 'text-leaf-600'
+                  : wsStatus === 'reconnecting' || wsStatus === 'connecting'
+                    ? 'text-amber-500'
+                    : 'text-grey-400'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full inline-block ${
+                  wsStatus === 'connected'
+                    ? 'bg-leaf-500'
+                    : wsStatus === 'reconnecting' || wsStatus === 'connecting'
+                      ? 'bg-amber-400 animate-pulse'
+                      : 'bg-grey-300'
+                }`}
+              />
+              {wsStatus === 'connected'
+                ? t('chat.online')
+                : wsStatus === 'reconnecting'
+                  ? 'Reconnecting...'
+                  : wsStatus === 'connecting'
+                    ? 'Connecting...'
+                    : 'Offline'}
             </span>
           </div>
         </div>

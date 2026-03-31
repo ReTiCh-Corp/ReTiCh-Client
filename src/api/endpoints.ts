@@ -22,6 +22,8 @@ export const CONVERSATION_ENDPOINTS = {
     `/api/v1/conversations/${conversationId}/participants/${userId}`,
 } as const;
 
+export const WS_ENDPOINT = '/api/v1/ws';
+
 export const MESSAGE_ENDPOINTS = {
   BY_CONVERSATION: (conversationId: string) =>
     `/api/v1/conversations/${conversationId}/messages`,
