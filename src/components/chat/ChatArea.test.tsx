@@ -44,6 +44,10 @@ vi.mock('../../hooks/useMessages', () => ({
     mutate: vi.fn(),
     isPending: false,
   }),
+  useSearchMessages: () => ({
+    data: null,
+    isLoading: false,
+  }),
 }));
 
 vi.mock('../../stores/useAuthStore', () => ({

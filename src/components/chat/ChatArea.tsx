@@ -20,6 +20,7 @@ import type { Message } from '../../api/messages';
 import {
   useDeleteMessage,
   useMessages,
+  useSearchMessages,
   useSendMessage,
   useUpdateMessage,
 } from '../../hooks/useMessages';
@@ -339,6 +340,8 @@ export default function ChatArea({
   } = useMessageStore();
 
   const [inputValue, setInputValue] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -351,6 +354,10 @@ export default function ChatArea({
   const updateMutation = useUpdateMessage();
   const uploadMutation = useUploadFile();
   const readReceiptMutation = useUpdateReadReceipt();
+  const { data: searchData, isLoading: isSearching } = useSearchMessages(
+    conversationId ?? '',
+    searchQuery,
+  );
   const lastReadIdRef = useRef<string | null>(null);
 
   const messages = data?.data ?? [];
@@ -570,7 +577,15 @@ export default function ChatArea({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            className="w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors cursor-pointer"
+            onClick={() => {
+              setShowSearch(!showSearch);
+              if (showSearch) setSearchQuery('');
+            }}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+              showSearch
+                ? 'bg-primary-100 text-primary-600'
+                : 'hover:bg-grey-100 text-grey-400 hover:text-grey-600'
+            }`}
           >
             <Search size={18} />
           </button>
@@ -583,25 +598,87 @@ export default function ChatArea({
         </div>
       </div>
 
+      {/* Search bar */}
+      {showSearch && (
+        <div className="px-6 py-2 bg-surface border-b border-border">
+          <div className="relative">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-grey-400"
+            />
+            <input
+              type="text"
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+              className="w-full pl-8 pr-8 py-2 rounded-lg bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full hover:bg-grey-200 flex items-center justify-center text-grey-400 cursor-pointer"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+          {searchQuery.length >= 2 && (
+            <p className="text-[11px] text-grey-400 mt-1">
+              {isSearching
+                ? 'Searching...'
+                : `${searchData?.data?.length ?? 0} result${(searchData?.data?.length ?? 0) !== 1 ? 's' : ''}`}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Messages */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
       >
-        {isLoading ? (
-          <MessageSkeleton />
-        ) : displayMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-12 h-12 rounded-xl bg-grey-100 flex items-center justify-center mb-3">
-              <MessageSquare size={20} className="text-grey-400" />
-            </div>
-            <p className="text-sm text-grey-500">No messages yet</p>
-            <p className="text-xs text-grey-400 mt-1">
-              Send the first message!
-            </p>
-          </div>
-        ) : (
-          displayMessages.map((msg) => (
+        {(() => {
+          // Show search results when searching
+          if (showSearch && searchQuery.length >= 2) {
+            const searchResults = [...(searchData?.data ?? [])].reverse();
+            if (isSearching) return <MessageSkeleton />;
+            if (searchResults.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <Search size={20} className="text-grey-300 mb-2" />
+                  <p className="text-sm text-grey-500">No results found</p>
+                </div>
+              );
+            }
+            return searchResults.map((msg) => (
+              <MessageBubble
+                key={msg.id}
+                msg={msg}
+                isMe={msg.sender_id === currentUserId}
+                conversationName={conversationName}
+                conversationId={conversationId}
+              />
+            ));
+          }
+
+          // Normal message display
+          if (isLoading) return <MessageSkeleton />;
+          if (displayMessages.length === 0) {
+            return (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="w-12 h-12 rounded-xl bg-grey-100 flex items-center justify-center mb-3">
+                  <MessageSquare size={20} className="text-grey-400" />
+                </div>
+                <p className="text-sm text-grey-500">No messages yet</p>
+                <p className="text-xs text-grey-400 mt-1">
+                  Send the first message!
+                </p>
+              </div>
+            );
+          }
+          return displayMessages.map((msg) => (
             <MessageBubble
               key={msg.id}
               msg={msg}
@@ -614,8 +691,8 @@ export default function ChatArea({
                   : undefined
               }
             />
-          ))
-        )}
+          ));
+        })()}
         <div ref={messagesEndRef} />
       </div>
 

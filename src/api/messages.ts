@@ -79,3 +79,17 @@ export function deleteMessage(messageId: string) {
     method: 'DELETE',
   });
 }
+
+export function searchMessages(
+  conversationId: string,
+  query: string,
+  params?: { limit?: number; offset?: number },
+) {
+  const searchParams = new URLSearchParams();
+  searchParams.set('q', query);
+  if (params?.limit) searchParams.set('limit', String(params.limit));
+  if (params?.offset) searchParams.set('offset', String(params.offset));
+
+  const endpoint = `${MESSAGE_ENDPOINTS.SEARCH(conversationId)}?${searchParams.toString()}`;
+  return apiClient<ApiResponse<Message[]>>(endpoint);
+}
