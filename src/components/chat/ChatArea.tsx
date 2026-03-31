@@ -4,8 +4,10 @@ import {
   ChevronRight,
   CornerUpLeft,
   Edit3,
+  FileIcon,
   MessageSquare,
   MoreHorizontal,
+  Paperclip,
   Pencil,
   Search,
   Smile,
@@ -22,6 +24,7 @@ import {
   useUpdateMessage,
 } from '../../hooks/useMessages';
 import { useAddReaction, useRemoveReaction } from '../../hooks/useSocial';
+import { useUploadFile } from '../../hooks/useUploads';
 import type { WSStatus } from '../../hooks/useWebSocket';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useMessageStore } from '../../stores/useMessageStore';
@@ -336,6 +339,8 @@ export default function ChatArea({
   } = useMessageStore();
 
   const [inputValue, setInputValue] = useState('');
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -344,6 +349,7 @@ export default function ChatArea({
   });
   const sendMutation = useSendMessage();
   const updateMutation = useUpdateMessage();
+  const uploadMutation = useUploadFile();
 
   const messages = data?.data ?? [];
   // API returns DESC order, reverse for display (oldest first)
@@ -377,8 +383,17 @@ export default function ChatArea({
     }
   }, [editingMessage]);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPendingFile(file);
+    }
+    // Reset input so same file can be selected again
+    e.target.value = '';
+  };
+
   const handleSend = useCallback(() => {
-    if (!inputValue.trim() || !conversationId) return;
+    if ((!inputValue.trim() && !pendingFile) || !conversationId) return;
 
     if (editingMessage) {
       updateMutation.mutate(
@@ -395,30 +410,45 @@ export default function ChatArea({
         },
       );
     } else {
+      const fileToUpload = pendingFile;
+      const messageContent = inputValue.trim() || (fileToUpload ? `📎 ${fileToUpload.name}` : '');
+      if (!messageContent) return;
+
       sendMutation.mutate(
         {
           conversationId,
           input: {
-            content: inputValue.trim(),
+            content: messageContent,
             reply_to_id: replyingTo?.id,
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             setInputValue('');
             clearDraft(conversationId);
             setReplyingTo(null);
+            setPendingFile(null);
+            // Upload file if pending
+            if (fileToUpload && data?.data?.id) {
+              uploadMutation.mutate({
+                messageId: data.data.id,
+                conversationId,
+                file: fileToUpload,
+              });
+            }
           },
         },
       );
     }
   }, [
     inputValue,
+    pendingFile,
     conversationId,
     editingMessage,
     replyingTo,
     sendMutation,
     updateMutation,
+    uploadMutation,
     setEditingMessage,
     setReplyingTo,
     getDraft,
@@ -609,9 +639,51 @@ export default function ChatArea({
         </div>
       )}
 
+      {/* Pending file preview */}
+      {pendingFile && (
+        <div className="px-6 py-2 bg-grey-50 border-t border-grey-200 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-grey-600 min-w-0">
+            {pendingFile.type.startsWith('image/') ? (
+              <img
+                src={URL.createObjectURL(pendingFile)}
+                alt={pendingFile.name}
+                className="w-10 h-10 rounded object-cover"
+              />
+            ) : (
+              <FileIcon size={16} className="shrink-0" />
+            )}
+            <span className="truncate">{pendingFile.name}</span>
+            <span className="text-grey-400 shrink-0">
+              ({(pendingFile.size / 1024).toFixed(0)} KB)
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPendingFile(null)}
+            className="w-6 h-6 rounded-full hover:bg-grey-200 flex items-center justify-center text-grey-400 cursor-pointer shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Input */}
       <div className="px-6 py-4 bg-surface border-t border-border">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileSelect}
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip"
+        />
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-9 h-9 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors shrink-0 cursor-pointer"
+          >
+            <Paperclip size={20} />
+          </button>
           <button
             type="button"
             className="w-9 h-9 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors shrink-0 cursor-pointer"
@@ -652,11 +724,11 @@ export default function ChatArea({
             <button
               type="button"
               onClick={handleSend}
-              disabled={!inputValue.trim() || sendMutation.isPending}
+              disabled={(!inputValue.trim() && !pendingFile) || sendMutation.isPending}
               className={`
                 w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer
                 ${
-                  inputValue.trim()
+                  inputValue.trim() || pendingFile
                     ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm'
                     : 'bg-grey-100 text-grey-400'
                 }

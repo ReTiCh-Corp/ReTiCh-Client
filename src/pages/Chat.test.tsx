@@ -127,6 +127,10 @@ vi.mock('../hooks/useSocial', () => ({
   useRemoveReaction: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
+vi.mock('../hooks/useUploads', () => ({
+  useUploadFile: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
