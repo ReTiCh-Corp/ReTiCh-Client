@@ -4,6 +4,7 @@ import type { Message } from '../api/messages';
 import type { PaginationMeta } from '../api/conversations';
 import { WS_ENDPOINT } from '../api/endpoints';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useMessageStore } from '../stores/useMessageStore';
 import { conversationKeys } from './useConversations';
 import { messageKeys } from './useMessages';
 
@@ -143,9 +144,21 @@ export function useWebSocket() {
           });
           break;
 
-        case 'typing.start':
-        case 'typing.stop':
+        case 'typing.start': {
+          const { user_id } = event.payload as { user_id: string };
+          if (user_id) {
+            useMessageStore.getState().addTypingUser(conversationId, user_id);
+          }
           break;
+        }
+
+        case 'typing.stop': {
+          const { user_id: stoppedUserId } = event.payload as { user_id: string };
+          if (stoppedUserId) {
+            useMessageStore.getState().removeTypingUser(conversationId, stoppedUserId);
+          }
+          break;
+        }
 
         default:
           break;

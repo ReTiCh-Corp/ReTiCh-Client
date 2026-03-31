@@ -110,9 +110,12 @@ vi.mock('../stores/useMessageStore', () => ({
     const state = {
       editingMessage: null,
       replyingTo: null,
+      typingUsers: {},
       drafts: {},
       setEditingMessage: vi.fn(),
       setReplyingTo: vi.fn(),
+      addTypingUser: vi.fn(),
+      removeTypingUser: vi.fn(),
       getDraft: () => '',
       setDraft: vi.fn(),
       clearDraft: vi.fn(),
