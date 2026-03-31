@@ -74,6 +74,7 @@ vi.mock('../../stores/useMessageStore', () => ({
 vi.mock('../../hooks/useSocial', () => ({
   useAddReaction: () => ({ mutate: vi.fn(), isPending: false }),
   useRemoveReaction: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateReadReceipt: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 vi.mock('../../hooks/useUploads', () => ({

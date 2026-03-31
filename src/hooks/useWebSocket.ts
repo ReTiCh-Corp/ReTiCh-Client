@@ -4,6 +4,7 @@ import type { Message } from '../api/messages';
 import type { PaginationMeta } from '../api/conversations';
 import { WS_ENDPOINT } from '../api/endpoints';
 import { useAuthStore } from '../stores/useAuthStore';
+import { conversationKeys } from './useConversations';
 import { messageKeys } from './useMessages';
 
 export type WSStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
@@ -77,6 +78,8 @@ export function useWebSocket() {
           );
           // Also invalidate to get fresh data on next focus
           queryClient.invalidateQueries({ queryKey, refetchType: 'none' });
+          // Refresh conversation list to update unread counts
+          queryClient.invalidateQueries({ queryKey: conversationKeys.lists() });
           break;
         }
 
@@ -130,6 +133,7 @@ export function useWebSocket() {
           queryClient.invalidateQueries({
             queryKey: ['readReceipts', conversationId],
           });
+          queryClient.invalidateQueries({ queryKey: conversationKeys.lists() });
           break;
 
         case 'message.pinned':
