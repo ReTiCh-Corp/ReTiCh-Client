@@ -2,6 +2,11 @@ import { apiClient } from './client';
 import type { PaginationMeta } from './conversations';
 import { MESSAGE_ENDPOINTS } from './endpoints';
 
+export interface MessageReaction {
+  emoji: string;
+  user_id: string;
+}
+
 export interface Message {
   id: string;
   conversation_id: string;
@@ -13,6 +18,7 @@ export interface Message {
   is_edited: boolean;
   edited_at?: string;
   created_at: string;
+  reactions?: MessageReaction[];
 }
 
 interface ApiResponse<T> {

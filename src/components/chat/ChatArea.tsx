@@ -2,6 +2,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  CornerUpLeft,
   Edit3,
   MessageSquare,
   MoreHorizontal,
@@ -20,6 +21,7 @@ import {
   useSendMessage,
   useUpdateMessage,
 } from '../../hooks/useMessages';
+import { useAddReaction, useRemoveReaction } from '../../hooks/useSocial';
 import type { WSStatus } from '../../hooks/useWebSocket';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useMessageStore } from '../../stores/useMessageStore';
@@ -51,31 +53,41 @@ function formatMessageTime(dateStr: string): string {
   });
 }
 
+const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
 function MessageBubble({
   msg,
   isMe,
   conversationName,
   conversationId,
+  replyToMessage,
 }: {
   msg: Message;
   isMe: boolean;
   conversationName: string;
   conversationId: string;
+  replyToMessage?: Message;
 }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { setEditingMessage } = useMessageStore();
+  const { setEditingMessage, setReplyingTo } = useMessageStore();
   const deleteMutation = useDeleteMessage();
+  const addReactionMutation = useAddReaction();
+  const removeReactionMutation = useRemoveReaction();
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setShowMenu(false);
+        setShowEmojiPicker(false);
       }
     }
-    if (showMenu) document.addEventListener('mousedown', handleClickOutside);
+    if (showMenu || showEmojiPicker)
+      document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMenu]);
+  }, [showMenu, showEmojiPicker]);
 
   const handleEdit = () => {
     setShowMenu(false);
@@ -86,6 +98,39 @@ function MessageBubble({
     setShowMenu(false);
     deleteMutation.mutate({ messageId: msg.id, conversationId });
   };
+
+  const handleReply = () => {
+    setShowMenu(false);
+    setReplyingTo({
+      id: msg.id,
+      content: msg.content ?? '',
+      senderName: isMe ? 'You' : conversationName,
+    });
+  };
+
+  const handleReaction = (emoji: string) => {
+    setShowEmojiPicker(false);
+    setShowMenu(false);
+    // Toggle: if user already reacted with this emoji, remove it
+    const alreadyReacted = msg.reactions?.some(
+      (r) => r.emoji === emoji && r.user_id === currentUserId,
+    );
+    if (alreadyReacted) {
+      removeReactionMutation.mutate({ messageId: msg.id, emoji });
+    } else {
+      addReactionMutation.mutate({ messageId: msg.id, emoji });
+    }
+  };
+
+  // Group reactions by emoji
+  const groupedReactions = (msg.reactions ?? []).reduce(
+    (acc, r) => {
+      if (!acc[r.emoji]) acc[r.emoji] = [];
+      acc[r.emoji].push(r.user_id);
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  );
 
   return (
     <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} group`}>
@@ -103,6 +148,26 @@ function MessageBubble({
           </div>
         )}
         <div className="relative">
+          {/* Reply preview */}
+          {replyToMessage && (
+            <div
+              className={`text-xs px-3 py-1.5 mb-0.5 rounded-t-xl border-l-2 ${
+                isMe
+                  ? 'bg-primary-700/30 border-primary-300 text-primary-100'
+                  : 'bg-grey-50 border-grey-300 text-grey-500'
+              }`}
+            >
+              <span className="font-medium">
+                {replyToMessage.sender_id === currentUserId
+                  ? 'You'
+                  : conversationName}
+              </span>
+              <p className="truncate opacity-80">
+                {replyToMessage.content}
+              </p>
+            </div>
+          )}
+
           <div
             className={`
               px-4 py-2.5 text-sm leading-relaxed
@@ -111,16 +176,39 @@ function MessageBubble({
                   ? 'bg-primary-600 text-white rounded-2xl rounded-br-md'
                   : 'bg-surface text-text rounded-2xl rounded-bl-md shadow-sm border border-border-light'
               }
+              ${replyToMessage ? 'rounded-t-lg' : ''}
             `}
             onContextMenu={(e) => {
-              if (isMe) {
-                e.preventDefault();
-                setShowMenu(true);
-              }
+              e.preventDefault();
+              setShowMenu(true);
             }}
           >
             {msg.content}
           </div>
+
+          {/* Reactions display */}
+          {Object.keys(groupedReactions).length > 0 && (
+            <div
+              className={`flex flex-wrap gap-1 mt-1 ${isMe ? 'justify-end' : ''}`}
+            >
+              {Object.entries(groupedReactions).map(([emoji, userIds]) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => handleReaction(emoji)}
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${
+                    userIds.includes(currentUserId ?? '')
+                      ? 'bg-primary-50 border-primary-300 text-primary-700'
+                      : 'bg-grey-50 border-grey-200 text-grey-600 hover:bg-grey-100'
+                  }`}
+                >
+                  <span>{emoji}</span>
+                  <span>{userIds.length}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <div
             className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : ''}`}
           >
@@ -136,36 +224,61 @@ function MessageBubble({
           </div>
 
           {/* Context menu */}
-          {showMenu && isMe && (
+          {showMenu && (
             <div
               ref={menuRef}
-              className="absolute right-0 bottom-full mb-1 bg-surface border border-border rounded-lg shadow-lg z-10 overflow-hidden"
+              className={`absolute ${isMe ? 'right-0' : 'left-0'} bottom-full mb-1 bg-surface border border-border rounded-lg shadow-lg z-10 overflow-hidden min-w-[140px]`}
             >
+              {/* Quick emoji row */}
+              <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border-light">
+                {QUICK_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleReaction(emoji)}
+                    className="w-7 h-7 rounded-full hover:bg-grey-100 flex items-center justify-center text-sm cursor-pointer transition-colors"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
-                onClick={handleEdit}
+                onClick={handleReply}
                 className="flex items-center gap-2 px-3 py-2 text-sm text-text hover:bg-grey-50 w-full cursor-pointer"
               >
-                <Edit3 size={14} />
-                Edit
+                <CornerUpLeft size={14} />
+                Reply
               </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full cursor-pointer"
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
+              {isMe && (
+                <button
+                  type="button"
+                  onClick={handleEdit}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-text hover:bg-grey-50 w-full cursor-pointer"
+                >
+                  <Edit3 size={14} />
+                  Edit
+                </button>
+              )}
+              {isMe && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full cursor-pointer"
+                >
+                  <Trash2 size={14} />
+                  Delete
+                </button>
+              )}
             </div>
           )}
 
-          {/* Hover action (for non-context-menu) */}
-          {isMe && !showMenu && (
+          {/* Hover action */}
+          {!showMenu && (
             <button
               type="button"
               onClick={() => setShowMenu(true)}
-              className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 transition-opacity cursor-pointer"
+              className={`absolute ${isMe ? '-left-8' : '-right-8'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 transition-opacity cursor-pointer`}
             >
               <MoreHorizontal size={14} />
             </button>
@@ -212,8 +325,15 @@ export default function ChatArea({
 }: ChatAreaProps) {
   const { t } = useTranslation();
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const { editingMessage, setEditingMessage, getDraft, setDraft, clearDraft } =
-    useMessageStore();
+  const {
+    editingMessage,
+    setEditingMessage,
+    replyingTo,
+    setReplyingTo,
+    getDraft,
+    setDraft,
+    clearDraft,
+  } = useMessageStore();
 
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -278,12 +398,16 @@ export default function ChatArea({
       sendMutation.mutate(
         {
           conversationId,
-          input: { content: inputValue.trim() },
+          input: {
+            content: inputValue.trim(),
+            reply_to_id: replyingTo?.id,
+          },
         },
         {
           onSuccess: () => {
             setInputValue('');
             clearDraft(conversationId);
+            setReplyingTo(null);
           },
         },
       );
@@ -292,9 +416,11 @@ export default function ChatArea({
     inputValue,
     conversationId,
     editingMessage,
+    replyingTo,
     sendMutation,
     updateMutation,
     setEditingMessage,
+    setReplyingTo,
     getDraft,
     clearDraft,
   ]);
@@ -304,9 +430,13 @@ export default function ChatArea({
       e.preventDefault();
       handleSend();
     }
-    if (e.key === 'Escape' && editingMessage) {
-      setEditingMessage(null);
-      setInputValue(conversationId ? getDraft(conversationId) : '');
+    if (e.key === 'Escape') {
+      if (editingMessage) {
+        setEditingMessage(null);
+        setInputValue(conversationId ? getDraft(conversationId) : '');
+      } else if (replyingTo) {
+        setReplyingTo(null);
+      }
     }
   };
 
@@ -431,11 +561,36 @@ export default function ChatArea({
               isMe={msg.sender_id === currentUserId}
               conversationName={conversationName}
               conversationId={conversationId}
+              replyToMessage={
+                msg.reply_to_id
+                  ? displayMessages.find((m) => m.id === msg.reply_to_id)
+                  : undefined
+              }
             />
           ))
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Reply banner */}
+      {replyingTo && !editingMessage && (
+        <div className="px-6 py-2 bg-grey-50 border-t border-grey-200 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-grey-600 min-w-0">
+            <CornerUpLeft size={14} className="shrink-0" />
+            <span className="truncate">
+              Replying to <strong>{replyingTo.senderName}</strong>:{' '}
+              {replyingTo.content}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReplyingTo(null)}
+            className="w-6 h-6 rounded-full hover:bg-grey-200 flex items-center justify-center text-grey-400 cursor-pointer shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Editing banner */}
       {editingMessage && (
