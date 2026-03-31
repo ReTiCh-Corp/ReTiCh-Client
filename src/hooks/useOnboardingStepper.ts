@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { updateProfile, completeOnboardingAPI, type UpdateProfilePayload } from '../api/auth';
+import { uploadAvatar } from '../api/users';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useOnboardingStore } from '../stores/useOnboardingStore';
 import { STATUS_PRESETS } from '../components/onboarding/StepStatus';
@@ -41,6 +42,12 @@ export function useOnboardingStepper() {
       }
 
       await updateProfile(payload);
+
+      // Upload avatar if selected
+      if (onboardingStore.profilePicture) {
+        await uploadAvatar(onboardingStore.profilePicture);
+      }
+
       await completeOnboardingAPI();
 
       completeOnboarding();
