@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
+  Camera,
   User,
   AtSign,
   Phone,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useMyProfile, useUpdateMyProfile } from '../hooks/useProfile';
 import type { UpdateProfileInput } from '../api/users';
+import { uploadAvatar } from '../api/users';
 
 const GENDER_OPTIONS = [
   { value: '', labelKey: 'profile.unspecified' },
@@ -77,6 +79,31 @@ export default function ProfileEdit() {
 
   const [, setTouched] = useState<Record<string, boolean>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+
+    // Upload
+    setAvatarUploading(true);
+    try {
+      await uploadAvatar(file);
+    } catch {
+      setSubmitError(t('profile.avatarUploadError'));
+      setAvatarPreview(null);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
@@ -179,21 +206,42 @@ export default function ProfileEdit() {
       <div className="flex-1 overflow-y-auto">
         {/* ── Avatar ── */}
         <div className="flex flex-col items-center pt-6 pb-2">
-          <div className="relative">
-            {profile.avatar_url ? (
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarUploading}
+            className="relative group cursor-pointer"
+          >
+            {avatarPreview || profile.avatar_url ? (
               <img
-                src={profile.avatar_url}
+                src={avatarPreview ?? profile.avatar_url ?? ''}
                 alt={form.first_name || form.username}
-                className="w-24 h-24 rounded-full object-cover ring-4 ring-surface shadow-lg"
+                className={`w-24 h-24 rounded-full object-cover ring-4 ring-surface shadow-lg ${avatarUploading ? 'opacity-50' : ''}`}
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-200 to-primary-400 flex items-center justify-center ring-4 ring-surface shadow-lg">
+              <div className={`w-24 h-24 rounded-full bg-gradient-to-br from-primary-200 to-primary-400 flex items-center justify-center ring-4 ring-surface shadow-lg ${avatarUploading ? 'opacity-50' : ''}`}>
                 <span className="font-display font-bold text-3xl text-white drop-shadow-sm">
                   {initials}
                 </span>
               </div>
             )}
-          </div>
+            <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+              <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            {avatarUploading && (
+              <div className="absolute inset-0 rounded-full flex items-center justify-center">
+                <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              </div>
+            )}
+          </button>
+          <p className="text-xs text-grey-400 mt-2">{t('profile.tapToChangePhoto')}</p>
         </div>
 
         <div className="px-5 pb-10 space-y-4 mt-4">

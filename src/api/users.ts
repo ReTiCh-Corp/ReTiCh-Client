@@ -90,6 +90,30 @@ export function updateMyProfile(input: UpdateProfileInput) {
   });
 }
 
+export async function uploadAvatar(file: File): Promise<Profile> {
+  const { useAuthStore } = await import('../stores/useAuthStore');
+  const { accessToken } = useAuthStore.getState();
+
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL as string;
+  const response = await fetch(`${baseUrl}${USER_ENDPOINTS.AVATAR}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error ?? 'Avatar upload failed');
+  }
+
+  return response.json();
+}
+
 export function listUsers(params?: ListUsersParams) {
   const searchParams = new URLSearchParams();
   if (params?.limit) searchParams.set('limit', String(params.limit));
