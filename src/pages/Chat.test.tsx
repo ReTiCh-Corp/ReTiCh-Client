@@ -77,6 +77,14 @@ vi.mock('../hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
 }));
 
+vi.mock('../hooks/useWebSocket', () => ({
+  useWebSocket: () => ({
+    status: 'connected',
+    sendEvent: vi.fn(),
+    disconnect: vi.fn(),
+  }),
+}));
+
 vi.mock('../hooks/useMessages', () => ({
   useMessages: () => ({
     data: { data: [] },

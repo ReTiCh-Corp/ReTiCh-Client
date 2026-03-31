@@ -23,6 +23,7 @@ export {
   CONVERSATION_ENDPOINTS,
   MESSAGE_ENDPOINTS,
   USER_ENDPOINTS,
+  WS_ENDPOINT,
 } from './endpoints';
 export type {
   ListMessagesParams,

@@ -3,6 +3,7 @@ import ChatArea from '../components/chat/ChatArea';
 import ContactDetails from '../components/chat/ContactDetails';
 import ConversationList from '../components/chat/ConversationList';
 import { useConversation } from '../hooks/useConversations';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 export default function Chat() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -13,6 +14,7 @@ export default function Chat() {
   const [detailsClosing, setDetailsClosing] = useState(false);
   const closingTimeout = useRef<ReturnType<typeof setTimeout>>();
 
+  const { status: wsStatus } = useWebSocket();
   const { data: conversationData } = useConversation(selectedId ?? '');
   const conversation = conversationData?.data;
   const selectedName = conversation?.name ?? null;
@@ -59,7 +61,7 @@ export default function Chat() {
           md:flex md:flex-1 min-w-0
         `}
       >
-        <ChatArea conversationId={selectedId} conversationName={selectedName} onBack={handleBack} />
+        <ChatArea conversationId={selectedId} conversationName={selectedName} wsStatus={wsStatus} onBack={handleBack} />
       </div>
 
       {/* Contact details: hidden on mobile, animated on desktop */}
