@@ -59,7 +59,7 @@ export default function Chat() {
           md:flex md:flex-1 min-w-0
         `}
       >
-        <ChatArea conversationName={selectedName} onBack={handleBack} />
+        <ChatArea conversationId={selectedId} conversationName={selectedName} onBack={handleBack} />
       </div>
 
       {/* Contact details: hidden on mobile, animated on desktop */}

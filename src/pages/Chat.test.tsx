@@ -77,6 +77,41 @@ vi.mock('../hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
 }));
 
+vi.mock('../hooks/useMessages', () => ({
+  useMessages: () => ({
+    data: { data: [] },
+    isLoading: false,
+    error: null,
+  }),
+  useSendMessage: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+  useUpdateMessage: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+  useDeleteMessage: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+}));
+
+vi.mock('../stores/useMessageStore', () => ({
+  useMessageStore: vi.fn((selector?: (s: unknown) => unknown) => {
+    const state = {
+      editingMessage: null,
+      drafts: {},
+      setEditingMessage: vi.fn(),
+      getDraft: () => '',
+      setDraft: vi.fn(),
+      clearDraft: vi.fn(),
+    };
+    if (typeof selector === 'function') return selector(state);
+    return state;
+  }),
+}));
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
