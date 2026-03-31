@@ -174,9 +174,16 @@ export default function ConversationList({
                 >
                   {conv.name ?? t('chat.directMessage')}
                 </span>
-                <span className="text-[11px] text-grey-400 shrink-0 ml-2">
-                  {formatTime(conv.last_message_at ?? conv.created_at, t)}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {conv.unread_count > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-primary-600 text-white text-[10px] font-bold min-w-[18px] text-center leading-none">
+                      {conv.unread_count > 99 ? '99+' : conv.unread_count}
+                    </span>
+                  )}
+                  <span className="text-[11px] text-grey-400">
+                    {formatTime(conv.last_message_at ?? conv.created_at, t)}
+                  </span>
+                </div>
               </div>
               <p className="text-xs text-text-muted truncate">
                 {conv.description ?? conv.type}

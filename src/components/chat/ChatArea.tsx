@@ -23,7 +23,7 @@ import {
   useSendMessage,
   useUpdateMessage,
 } from '../../hooks/useMessages';
-import { useAddReaction, useRemoveReaction } from '../../hooks/useSocial';
+import { useAddReaction, useRemoveReaction, useUpdateReadReceipt } from '../../hooks/useSocial';
 import { useUploadFile } from '../../hooks/useUploads';
 import type { WSStatus } from '../../hooks/useWebSocket';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -350,10 +350,27 @@ export default function ChatArea({
   const sendMutation = useSendMessage();
   const updateMutation = useUpdateMessage();
   const uploadMutation = useUploadFile();
+  const readReceiptMutation = useUpdateReadReceipt();
+  const lastReadIdRef = useRef<string | null>(null);
 
   const messages = data?.data ?? [];
   // API returns DESC order, reverse for display (oldest first)
   const displayMessages = [...messages].reverse();
+
+  // Auto mark conversation as read when messages load
+  useEffect(() => {
+    if (conversationId && displayMessages.length > 0) {
+      const latestMessage = displayMessages[displayMessages.length - 1];
+      if (latestMessage.id !== lastReadIdRef.current) {
+        lastReadIdRef.current = latestMessage.id;
+        readReceiptMutation.mutate({
+          conversationId,
+          lastReadMessageId: latestMessage.id,
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, displayMessages.length]);
 
   // Restore draft when switching conversations
   useEffect(() => {

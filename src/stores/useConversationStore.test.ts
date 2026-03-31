@@ -109,6 +109,7 @@ describe('useConversationStore', () => {
         last_message_at: null,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',
+        unread_count: 0,
       },
     ];
     useConversationStore.getState().setSearchResults(results);
