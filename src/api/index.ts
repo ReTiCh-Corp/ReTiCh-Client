@@ -24,5 +24,17 @@ export {
   MESSAGE_ENDPOINTS,
   USER_ENDPOINTS,
 } from './endpoints';
+export type {
+  ListMessagesParams,
+  Message,
+  SendMessageInput,
+  UpdateMessageInput,
+} from './messages';
+export {
+  deleteMessage,
+  listMessages,
+  sendMessage,
+  updateMessage,
+} from './messages';
 export type { ListUsersParams, User } from './users';
 export { listUsers } from './users';

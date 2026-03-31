@@ -27,4 +27,5 @@ export const MESSAGE_ENDPOINTS = {
     `/api/v1/conversations/${conversationId}/messages`,
   SEND: (conversationId: string) =>
     `/api/v1/conversations/${conversationId}/messages`,
+  BY_ID: (messageId: string) => `/api/v1/messages/${messageId}`,
 } as const;
