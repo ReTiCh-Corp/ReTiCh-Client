@@ -34,6 +34,7 @@ interface ChatAreaProps {
   conversationId: string | null;
   conversationName: string | null;
   wsStatus?: WSStatus;
+  sendWsEvent?: (type: string, conversationId: string, payload?: unknown) => void;
   onBack?: () => void;
 }
 
@@ -321,10 +322,14 @@ function MessageSkeleton() {
   );
 }
 
+const TYPING_DEBOUNCE_MS = 2000;
+const TYPING_TIMEOUT_MS = 5000;
+
 export default function ChatArea({
   conversationId,
   conversationName,
   wsStatus,
+  sendWsEvent,
   onBack,
 }: ChatAreaProps) {
   const { t } = useTranslation();
@@ -360,6 +365,46 @@ export default function ChatArea({
   );
   const lastReadIdRef = useRef<string | null>(null);
 
+  // Typing indicator logic
+  const typingUsers = useMessageStore(
+    (s) => s.typingUsers[conversationId ?? ''] ?? [],
+  );
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const sendTypingStart = useCallback(() => {
+    if (!conversationId || !sendWsEvent || isTypingRef.current) return;
+    isTypingRef.current = true;
+    const userId = useAuthStore.getState().user?.id;
+    sendWsEvent('typing.start', conversationId, { user_id: userId });
+  }, [conversationId, sendWsEvent]);
+
+  const sendTypingStop = useCallback(() => {
+    if (!conversationId || !sendWsEvent || !isTypingRef.current) return;
+    isTypingRef.current = false;
+    const userId = useAuthStore.getState().user?.id;
+    sendWsEvent('typing.stop', conversationId, { user_id: userId });
+  }, [conversationId, sendWsEvent]);
+
+  // Auto-cleanup typing timeouts for remote users
+  useEffect(() => {
+    if (typingUsers.length === 0) return;
+    const timeout = setTimeout(() => {
+      // Force remove all typing users after TYPING_TIMEOUT_MS
+      const store = useMessageStore.getState();
+      for (const userId of typingUsers) {
+        store.removeTypingUser(conversationId ?? '', userId);
+      }
+    }, TYPING_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, [typingUsers, conversationId]);
+
+  // Reset typing state when switching conversations
+  useEffect(() => {
+    isTypingRef.current = false;
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+  }, [conversationId]);
+
   const messages = data?.data ?? [];
   // API returns DESC order, reverse for display (oldest first)
   const displayMessages = [...messages].reverse();
@@ -393,6 +438,15 @@ export default function ChatArea({
     if (conversationId && !editingMessage) {
       setDraft(conversationId, value);
     }
+
+    // Typing indicator: send start, debounce stop
+    if (value.trim()) {
+      sendTypingStart();
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(sendTypingStop, TYPING_DEBOUNCE_MS);
+    } else {
+      sendTypingStop();
+    }
   };
 
   // Scroll to bottom on new messages
@@ -418,6 +472,10 @@ export default function ChatArea({
 
   const handleSend = useCallback(() => {
     if ((!inputValue.trim() && !pendingFile) || !conversationId) return;
+
+    // Stop typing indicator on send
+    sendTypingStop();
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     if (editingMessage) {
       updateMutation.mutate(
@@ -473,6 +531,7 @@ export default function ChatArea({
     sendMutation,
     updateMutation,
     uploadMutation,
+    sendTypingStop,
     setEditingMessage,
     setReplyingTo,
     getDraft,
@@ -695,6 +754,22 @@ export default function ChatArea({
         })()}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Typing indicator */}
+      {typingUsers.length > 0 && (
+        <div className="px-6 py-1.5 text-xs text-grey-500 flex items-center gap-1.5">
+          <span className="flex gap-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+          </span>
+          <span>
+            {typingUsers.length === 1
+              ? `Someone is typing...`
+              : `${typingUsers.length} people are typing...`}
+          </span>
+        </div>
+      )}
 
       {/* Reply banner */}
       {replyingTo && !editingMessage && (
