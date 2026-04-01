@@ -104,13 +104,18 @@ export default function ConversationModalCreation({
     if (!isFormValid || !selectedType) return;
 
     try {
-      await createMutation.mutateAsync({
+      const result = await createMutation.mutateAsync({
         type: selectedType,
         ...(needsName && { name: conversationName.trim() }),
         participant_ids: selectedMembers.map((m) => m.id),
       });
 
-      onClose();
+      const newId = result?.data?.id;
+      if (newId) {
+        onConversationCreated?.(newId);
+      } else {
+        onClose();
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         const existingConvId = (

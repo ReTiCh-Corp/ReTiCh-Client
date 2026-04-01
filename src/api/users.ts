@@ -114,6 +114,10 @@ export async function uploadAvatar(file: File): Promise<Profile> {
   return response.json();
 }
 
+export function getUserById(id: string) {
+  return apiClient<User>(USER_ENDPOINTS.BY_ID(id));
+}
+
 export function listUsers(params?: ListUsersParams) {
   const searchParams = new URLSearchParams();
   if (params?.limit) searchParams.set('limit', String(params.limit));

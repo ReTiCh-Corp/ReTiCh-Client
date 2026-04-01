@@ -37,6 +37,7 @@ export function useConversations(params?: ListConversationsParams) {
     queryKey: conversationKeys.list(params),
     queryFn: () => listConversations(params),
     placeholderData: keepPreviousData,
+    refetchInterval: 10_000,
   });
 }
 
