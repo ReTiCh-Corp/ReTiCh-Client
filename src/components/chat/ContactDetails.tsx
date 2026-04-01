@@ -1,5 +1,6 @@
 import { Image, Loader2, LogOut, UserPlus, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../api/client';
 import {
   useConversation,
@@ -13,6 +14,7 @@ import ParticipantList from './ParticipantList';
 interface ContactDetailsProps {
   conversationId: string | null;
   onClose: () => void;
+  isOtherUserOnline?: boolean;
 }
 
 function getInitials(name: string | null): string {
@@ -28,7 +30,9 @@ function getInitials(name: string | null): string {
 export default function ContactDetails({
   conversationId,
   onClose,
+  isOtherUserOnline,
 }: ContactDetailsProps) {
+  const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
@@ -93,11 +97,9 @@ export default function ContactDetails({
       });
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
-        setErrorMessage(
-          "You don't have permission to remove this member",
-        );
+        setErrorMessage(t('chat.permissionRemove'));
       } else {
-        setErrorMessage('An error occurred while removing the member');
+        setErrorMessage(t('chat.errorRemove'));
       }
     } finally {
       setRemovingUserId(null);
@@ -110,11 +112,9 @@ export default function ContactDetails({
       await leaveConversationMutation.mutateAsync(conversationId);
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
-        setErrorMessage(
-          "You don't have permission to leave this conversation",
-        );
+        setErrorMessage(t('chat.permissionLeave'));
       } else {
-        setErrorMessage('An error occurred while leaving the conversation');
+        setErrorMessage(t('chat.errorLeave'));
       }
     }
   };
@@ -124,7 +124,7 @@ export default function ContactDetails({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <span className="text-xs font-semibold text-grey-500 uppercase tracking-wider">
-          Details
+          {t('chat.details')}
         </span>
         <button
           type="button"
@@ -142,11 +142,13 @@ export default function ContactDetails({
             {initials}
           </span>
           {!isGroupOrChannel && (
-            <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-leaf-500 border-2 border-white" />
+            <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${
+              isOtherUserOnline ? 'bg-leaf-500' : 'bg-grey-300'
+            }`} />
           )}
         </div>
         <h3 className="font-display font-bold text-lg text-text">
-          {name ?? 'Direct message'}
+          {name ?? t('chat.directMessage')}
         </h3>
         {conversation.description && (
           <span className="text-sm text-text-muted text-center mt-1">
@@ -155,7 +157,7 @@ export default function ContactDetails({
         )}
         {isGroupOrChannel && (
           <span className="text-xs text-grey-400 mt-1">
-            {participants.length} member{participants.length !== 1 ? 's' : ''}
+            {t('chat.memberCount', { count: participants.length })}
           </span>
         )}
       </div>
@@ -165,7 +167,7 @@ export default function ContactDetails({
         <div className="px-5 pb-5">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider">
-              Members
+              {t('chat.members')}
             </h4>
             {canManageMembers && (
               <button
@@ -174,7 +176,7 @@ export default function ContactDetails({
                 className="flex items-center gap-1 text-[11px] text-primary-600 font-medium hover:text-primary-700 cursor-pointer transition-colors"
               >
                 <UserPlus size={12} />
-                Add
+                {t('chat.addMember')}
               </button>
             )}
           </div>
@@ -192,17 +194,17 @@ export default function ContactDetails({
       {!isGroupOrChannel && (
         <div className="px-5 pb-5">
           <h4 className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3">
-            Contact Info
+            {t('chat.contactInfo')}
           </h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-text-muted">Members</span>
+              <span className="text-xs text-text-muted">{t('chat.members')}</span>
               <span className="text-xs text-grey-600">
                 {participants.length}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-text-muted">Created</span>
+              <span className="text-xs text-text-muted">{t('chat.created')}</span>
               <span className="text-xs text-grey-600">
                 {new Date(conversation.created_at).toLocaleDateString()}
               </span>
@@ -215,13 +217,13 @@ export default function ContactDetails({
       <div className="px-5 pb-5">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider">
-            Shared Media
+            {t('chat.sharedMedia')}
           </h4>
           <button
             type="button"
             className="text-[11px] text-primary-600 font-medium hover:text-primary-700 cursor-pointer"
           >
-            View all
+            {t('chat.viewAll')}
           </button>
         </div>
         <div className="grid grid-cols-3 gap-1.5">
@@ -259,8 +261,8 @@ export default function ContactDetails({
               <LogOut size={16} />
             )}
             {leaveConversationMutation.isPending
-              ? 'Leaving...'
-              : 'Leave conversation'}
+              ? t('chat.leaving')
+              : t('chat.leaveConversation')}
           </button>
         </div>
       )}

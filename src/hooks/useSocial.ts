@@ -40,10 +40,14 @@ export function useAddReaction() {
     }: {
       messageId: string;
       emoji: string;
+      conversationId: string;
     }) => addReaction(messageId, emoji),
     onSettled: (_data, _err, variables) => {
       queryClient.invalidateQueries({
         queryKey: socialKeys.reactions(variables.messageId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['messages', 'list', variables.conversationId],
       });
     },
   });
@@ -59,10 +63,14 @@ export function useRemoveReaction() {
     }: {
       messageId: string;
       emoji: string;
+      conversationId: string;
     }) => removeReaction(messageId, emoji),
     onSettled: (_data, _err, variables) => {
       queryClient.invalidateQueries({
         queryKey: socialKeys.reactions(variables.messageId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['messages', 'list', variables.conversationId],
       });
     },
   });

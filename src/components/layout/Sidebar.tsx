@@ -56,10 +56,19 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom avatar placeholder */}
-      <div className="w-9 h-9 rounded-full bg-grey-200 flex items-center justify-center mt-auto">
-        <User size={16} className="text-grey-500" />
-      </div>
+      {/* Bottom avatar — navigates to profile */}
+      <button
+        type="button"
+        onClick={() => navigate('/profile')}
+        title={t('nav.profile')}
+        className={`w-9 h-9 rounded-full flex items-center justify-center mt-auto cursor-pointer transition-all duration-200 btn-icon-interactive ${
+          location.pathname.startsWith('/profile')
+            ? 'bg-primary-100 ring-2 ring-primary-300'
+            : 'bg-grey-200 hover:ring-2 hover:ring-grey-300'
+        }`}
+      >
+        <User size={16} className={location.pathname.startsWith('/profile') ? 'text-primary-600' : 'text-grey-500'} />
+      </button>
     </aside>
   );
 }

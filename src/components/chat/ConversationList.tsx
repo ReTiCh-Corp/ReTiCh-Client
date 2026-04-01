@@ -3,8 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Conversation } from '../../api/conversations';
-import { useConversations } from '../../hooks/useConversations';
+import { useConversation, useConversations } from '../../hooks/useConversations';
+import { useUser } from '../../hooks/useUsers';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useAuthStore } from '../../stores/useAuthStore';
 import { useConversationStore } from '../../stores/useConversationStore';
 import ConversationModalCreation from './ConversationModalCreation';
 
@@ -31,6 +33,83 @@ function formatTime(dateStr: string | null, t: TFunction): string {
   if (diffDays === 1) return t('chat.yesterday');
   if (diffDays < 7) return t('chat.daysAgo', { count: diffDays });
   return date.toLocaleDateString();
+}
+
+function useDmDisplayName(conv: Conversation): string | null {
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const isDmWithoutName = conv.type === 'direct' && !conv.name;
+  const { data: detail } = useConversation(isDmWithoutName ? conv.id : '');
+  const otherParticipant = isDmWithoutName
+    ? detail?.data?.participants?.find((p) => p.user_id !== currentUserId)
+    : null;
+  const { data: otherUser } = useUser(otherParticipant?.user_id ?? '');
+  if (!isDmWithoutName) return conv.name;
+  return otherUser?.username ?? null;
+}
+
+interface ConversationItemProps {
+  conv: Conversation;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+function ConversationItem({ conv, isSelected, onSelect }: ConversationItemProps) {
+  const { t } = useTranslation();
+  const displayName = useDmDisplayName(conv);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(conv.id)}
+      className={`
+        w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 cursor-pointer text-left
+        ${
+          isSelected
+            ? 'bg-primary-50 border border-primary-100'
+            : 'hover:bg-grey-50 border border-transparent'
+        }
+      `}
+    >
+      <div className="relative shrink-0">
+        <div
+          className={`
+          w-11 h-11 rounded-full flex items-center justify-center font-display font-semibold text-sm
+          ${
+            isSelected
+              ? 'bg-primary-200 text-primary-800'
+              : 'bg-grey-200 text-grey-600'
+          }
+        `}
+        >
+          {getInitials(displayName)}
+        </div>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-0.5">
+          <span
+            className={`text-sm font-semibold truncate ${isSelected ? 'text-primary-900' : 'text-text'}`}
+          >
+            {displayName ?? t('chat.directMessage')}
+          </span>
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            {conv.unread_count > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-primary-600 text-white text-[10px] font-bold min-w-[18px] text-center leading-none">
+                {conv.unread_count > 99 ? '99+' : conv.unread_count}
+              </span>
+            )}
+            <span className="text-[11px] text-grey-400">
+              {formatTime(conv.last_message_at ?? conv.created_at, t)}
+            </span>
+          </div>
+        </div>
+        {conv.description && (
+          <p className="text-xs text-text-muted truncate">
+            {conv.description}
+          </p>
+        )}
+      </div>
+    </button>
+  );
 }
 
 interface ConversationListProps {
@@ -137,59 +216,12 @@ export default function ConversationList({
           </div>
         )}
         {conversations.map((conv) => (
-          <button
+          <ConversationItem
             key={conv.id}
-            type="button"
-            onClick={() => onSelect(conv.id)}
-            className={`
-              w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 cursor-pointer text-left
-              ${
-                selectedId === conv.id
-                  ? 'bg-primary-50 border border-primary-100'
-                  : 'hover:bg-grey-50 border border-transparent'
-              }
-            `}
-          >
-            {/* Avatar */}
-            <div className="relative shrink-0">
-              <div
-                className={`
-                w-11 h-11 rounded-full flex items-center justify-center font-display font-semibold text-sm
-                ${
-                  selectedId === conv.id
-                    ? 'bg-primary-200 text-primary-800'
-                    : 'bg-grey-200 text-grey-600'
-                }
-              `}
-              >
-                {getInitials(conv.name)}
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-0.5">
-                <span
-                  className={`text-sm font-semibold truncate ${selectedId === conv.id ? 'text-primary-900' : 'text-text'}`}
-                >
-                  {conv.name ?? t('chat.directMessage')}
-                </span>
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  {conv.unread_count > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-primary-600 text-white text-[10px] font-bold min-w-[18px] text-center leading-none">
-                      {conv.unread_count > 99 ? '99+' : conv.unread_count}
-                    </span>
-                  )}
-                  <span className="text-[11px] text-grey-400">
-                    {formatTime(conv.last_message_at ?? conv.created_at, t)}
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-text-muted truncate">
-                {conv.description ?? conv.type}
-              </p>
-            </div>
-          </button>
+            conv={conv}
+            isSelected={selectedId === conv.id}
+            onSelect={onSelect}
+          />
         ))}
       </div>
 

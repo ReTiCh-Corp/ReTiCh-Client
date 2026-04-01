@@ -5,6 +5,7 @@ import type { PaginationMeta } from '../api/conversations';
 import { WS_ENDPOINT } from '../api/endpoints';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useMessageStore } from '../stores/useMessageStore';
+import { usePresenceStore } from '../stores/usePresenceStore';
 import { conversationKeys } from './useConversations';
 import { messageKeys } from './useMessages';
 
@@ -160,6 +161,30 @@ export function useWebSocket() {
           break;
         }
 
+        case 'presence.online': {
+          const { user_id: onlineUserId } = event.payload as { user_id: string };
+          if (onlineUserId) {
+            usePresenceStore.getState().setOnline(onlineUserId);
+          }
+          break;
+        }
+
+        case 'presence.offline': {
+          const { user_id: offlineUserId } = event.payload as { user_id: string };
+          if (offlineUserId) {
+            usePresenceStore.getState().setOffline(offlineUserId);
+          }
+          break;
+        }
+
+        case 'presence.snapshot': {
+          const { online_user_ids } = event.payload as { online_user_ids: string[] };
+          if (online_user_ids) {
+            usePresenceStore.getState().setBulkOnline(online_user_ids);
+          }
+          break;
+        }
+
         default:
           break;
       }
@@ -196,6 +221,7 @@ export function useWebSocket() {
     ws.onclose = (e) => {
       wsRef.current = null;
       setStatus('disconnected');
+      usePresenceStore.getState().clearAll();
 
       // Don't reconnect on intentional close (1000) or auth failure (4001)
       if (e.code === 1000 || e.code === 4001) return;
