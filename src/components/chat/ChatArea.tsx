@@ -324,6 +324,7 @@ function MessageSkeleton() {
 
 const TYPING_DEBOUNCE_MS = 2000;
 const TYPING_TIMEOUT_MS = 5000;
+const EMPTY_TYPING_USERS: string[] = [];
 
 export default function ChatArea({
   conversationId,
@@ -365,7 +366,7 @@ export default function ChatArea({
 
   // Typing indicator logic
   const typingUsers = useMessageStore(
-    (s) => s.typingUsers[conversationId ?? ''] ?? [],
+    (s) => s.typingUsers[conversationId ?? ''] ?? EMPTY_TYPING_USERS,
   );
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
