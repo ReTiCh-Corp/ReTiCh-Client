@@ -69,7 +69,6 @@ vi.mock('../../stores/useMessageStore', () => ({
       setReplyingTo: vi.fn(),
       addTypingUser: vi.fn(),
       removeTypingUser: vi.fn(),
-      getDraft: () => '',
       setDraft: vi.fn(),
       clearDraft: vi.fn(),
     };

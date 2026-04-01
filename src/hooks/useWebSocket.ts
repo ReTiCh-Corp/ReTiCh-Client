@@ -176,8 +176,8 @@ export function useWebSocket() {
 
     setStatus(reconnectAttemptRef.current > 0 ? 'reconnecting' : 'connecting');
 
-    const wsUrl = `${getWSBaseUrl()}${WS_ENDPOINT}`;
-    const ws = new WebSocket(wsUrl, ['access_token', token]);
+    const wsUrl = `${getWSBaseUrl()}${WS_ENDPOINT}?token=${encodeURIComponent(token)}`;
+    const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       setStatus('connected');

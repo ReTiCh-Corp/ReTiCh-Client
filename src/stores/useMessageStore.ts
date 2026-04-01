@@ -19,14 +19,13 @@ interface MessageState {
   typingUsers: Record<string, string[]>;
   setDraft: (conversationId: string, content: string) => void;
   clearDraft: (conversationId: string) => void;
-  getDraft: (conversationId: string) => string;
   setEditingMessage: (message: EditingMessage | null) => void;
   setReplyingTo: (message: ReplyingTo | null) => void;
   addTypingUser: (conversationId: string, userId: string) => void;
   removeTypingUser: (conversationId: string, userId: string) => void;
 }
 
-export const useMessageStore = create<MessageState>()((set, get) => ({
+export const useMessageStore = create<MessageState>()((set) => ({
   drafts: {},
   editingMessage: null,
   replyingTo: null,
@@ -40,7 +39,6 @@ export const useMessageStore = create<MessageState>()((set, get) => ({
       const { [conversationId]: _, ...rest } = state.drafts;
       return { drafts: rest };
     }),
-  getDraft: (conversationId) => get().drafts[conversationId] ?? '',
   setEditingMessage: (message) =>
     set({ editingMessage: message, replyingTo: null }),
   setReplyingTo: (message) =>
