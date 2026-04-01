@@ -382,3 +382,127 @@ h6 {
 .animate-callback-bar-fill {
   animation: callback-bar-fill 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
 }
+
+/* ── Chat Animations ── */
+
+/* Message bubble entrance */
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-in {
+  animation: message-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Icon button interactions */
+.btn-icon-interactive {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-icon-interactive:hover {
+  transform: scale(1.1);
+}
+
+.btn-icon-interactive:active {
+  transform: scale(0.9);
+}
+
+/* Send button press effect */
+.btn-send-interactive {
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-send-interactive:active {
+  transform: scale(0.88);
+}
+
+/* Context menu / emoji picker popup */
+@keyframes popup-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-popup-in {
+  animation: popup-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Banner slide-down (reply, edit, file) */
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-banner-in {
+  animation: banner-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Reaction pill pop */
+@keyframes reaction-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-reaction-pop {
+  animation: reaction-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Search bar slide-down */
+@keyframes search-bar-in {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 80px;
+  }
+}
+
+.animate-search-bar-in {
+  animation: search-bar-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  overflow: hidden;
+}
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-message-in,
+  .animate-popup-in,
+  .animate-banner-in,
+  .animate-reaction-pop,
+  .animate-search-bar-in {
+    animation: none !important;
+  }
+
+  .btn-icon-interactive,
+  .btn-send-interactive {
+    transition: none !important;
+  }
+}
