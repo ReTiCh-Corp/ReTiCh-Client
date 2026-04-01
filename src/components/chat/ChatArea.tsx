@@ -26,6 +26,7 @@ import {
 } from '../../hooks/useMessages';
 import { useAddReaction, useRemoveReaction, useUpdateReadReceipt } from '../../hooks/useSocial';
 import { useUploadFile } from '../../hooks/useUploads';
+import { useUser } from '../../hooks/useUsers';
 import type { WSStatus } from '../../hooks/useWebSocket';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useMessageStore } from '../../stores/useMessageStore';
@@ -36,9 +37,11 @@ interface ChatAreaProps {
   wsStatus?: WSStatus;
   sendWsEvent?: (type: string, conversationId: string, payload?: unknown) => void;
   onBack?: () => void;
+  isOtherUserOnline?: boolean;
+  isDirect?: boolean;
 }
 
-function formatMessageTime(dateStr: string): string {
+function formatMessageTime(dateStr: string, t: (key: string, opts?: Record<string, string>) => string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -48,7 +51,7 @@ function formatMessageTime(dateStr: string): string {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
   if (diffDays === 1) {
-    return `yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return t('chat.yesterday_time', { time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
   }
   return date.toLocaleDateString([], {
     month: 'short',
@@ -73,6 +76,7 @@ function MessageBubble({
   conversationId: string;
   replyToMessage?: Message;
 }) {
+  const { t } = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -109,7 +113,7 @@ function MessageBubble({
     setReplyingTo({
       id: msg.id,
       content: msg.content ?? '',
-      senderName: isMe ? 'You' : conversationName,
+      senderName: isMe ? t('chat.you') : conversationName,
     });
   };
 
@@ -121,9 +125,9 @@ function MessageBubble({
       (r) => r.emoji === emoji && r.user_id === currentUserId,
     );
     if (alreadyReacted) {
-      removeReactionMutation.mutate({ messageId: msg.id, emoji });
+      removeReactionMutation.mutate({ messageId: msg.id, emoji, conversationId });
     } else {
-      addReactionMutation.mutate({ messageId: msg.id, emoji });
+      addReactionMutation.mutate({ messageId: msg.id, emoji, conversationId });
     }
   };
 
@@ -138,7 +142,7 @@ function MessageBubble({
   );
 
   return (
-    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} group`}>
+    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} group animate-message-in`}>
       <div
         className={`flex items-end gap-2 max-w-[70%] ${isMe ? 'flex-row-reverse' : ''}`}
       >
@@ -164,7 +168,7 @@ function MessageBubble({
             >
               <span className="font-medium">
                 {replyToMessage.sender_id === currentUserId
-                  ? 'You'
+                  ? t('chat.you')
                   : conversationName}
               </span>
               <p className="truncate opacity-80">
@@ -201,7 +205,7 @@ function MessageBubble({
                   key={emoji}
                   type="button"
                   onClick={() => handleReaction(emoji)}
-                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border cursor-pointer transition-colors animate-reaction-pop ${
                     userIds.includes(currentUserId ?? '')
                       ? 'bg-primary-50 border-primary-300 text-primary-700'
                       : 'bg-grey-50 border-grey-200 text-grey-600 hover:bg-grey-100'
@@ -218,12 +222,12 @@ function MessageBubble({
             className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : ''}`}
           >
             <span className="text-[11px] text-grey-400">
-              {formatMessageTime(msg.created_at)}
+              {formatMessageTime(msg.created_at, t)}
             </span>
             {msg.is_edited && (
               <span className="text-[10px] text-grey-400 flex items-center gap-0.5">
                 <Pencil size={9} />
-                edited
+                {t('chat.edited')}
               </span>
             )}
           </div>
@@ -232,7 +236,8 @@ function MessageBubble({
           {showMenu && (
             <div
               ref={menuRef}
-              className={`absolute ${isMe ? 'right-0' : 'left-0'} bottom-full mb-1 bg-surface border border-border rounded-lg shadow-lg z-10 overflow-hidden min-w-[140px]`}
+              className={`absolute ${isMe ? 'right-0' : 'left-0'} bottom-full mb-1 bg-surface border border-border rounded-lg shadow-lg z-10 overflow-hidden min-w-[140px] animate-popup-in`}
+              style={{ transformOrigin: isMe ? 'bottom right' : 'bottom left' }}
             >
               {/* Quick emoji row */}
               <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border-light">
@@ -253,7 +258,7 @@ function MessageBubble({
                 className="flex items-center gap-2 px-3 py-2 text-sm text-text hover:bg-grey-50 w-full cursor-pointer"
               >
                 <CornerUpLeft size={14} />
-                Reply
+                {t('chat.reply')}
               </button>
               {isMe && (
                 <button
@@ -262,7 +267,7 @@ function MessageBubble({
                   className="flex items-center gap-2 px-3 py-2 text-sm text-text hover:bg-grey-50 w-full cursor-pointer"
                 >
                   <Edit3 size={14} />
-                  Edit
+                  {t('chat.edit')}
                 </button>
               )}
               {isMe && (
@@ -272,7 +277,7 @@ function MessageBubble({
                   className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full cursor-pointer"
                 >
                   <Trash2 size={14} />
-                  Delete
+                  {t('chat.delete')}
                 </button>
               )}
             </div>
@@ -283,7 +288,7 @@ function MessageBubble({
             <button
               type="button"
               onClick={() => setShowMenu(true)}
-              className={`absolute ${isMe ? '-left-8' : '-right-8'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 transition-opacity cursor-pointer`}
+              className={`absolute ${isMe ? '-left-8' : '-right-8'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 transition-opacity cursor-pointer btn-icon-interactive`}
             >
               <MoreHorizontal size={14} />
             </button>
@@ -322,6 +327,27 @@ function MessageSkeleton() {
   );
 }
 
+function TypingIndicator({ typingUserIds, t }: { typingUserIds: string[]; t: (key: string, opts?: Record<string, unknown>) => string }) {
+  // Resolve the first typing user's name
+  const { data: firstUser } = useUser(typingUserIds[0] ?? '');
+  const firstName = firstUser?.username;
+
+  return (
+    <div className="px-6 py-1.5 text-xs text-grey-500 flex items-center gap-1.5">
+      <span className="flex gap-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+        <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+        <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+      </span>
+      <span>
+        {typingUserIds.length === 1
+          ? t('chat.typing', { name: firstName ?? '…' })
+          : t('chat.typingPlural', { count: typingUserIds.length })}
+      </span>
+    </div>
+  );
+}
+
 const TYPING_DEBOUNCE_MS = 2000;
 const TYPING_TIMEOUT_MS = 5000;
 const EMPTY_TYPING_USERS: string[] = [];
@@ -332,6 +358,8 @@ export default function ChatArea({
   wsStatus,
   sendWsEvent,
   onBack,
+  isOtherUserOnline,
+  isDirect,
 }: ChatAreaProps) {
   const { t } = useTranslation();
   const currentUserId = useAuthStore((s) => s.user?.id);
@@ -346,8 +374,10 @@ export default function ChatArea({
   const [inputValue, setInputValue] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -467,6 +497,26 @@ export default function ChatArea({
     // Reset input so same file can be selected again
     e.target.value = '';
   };
+
+  const handleEmojiInsert = (emoji: string) => {
+    setInputValue((prev) => prev + emoji);
+    if (conversationId && !editingMessage) {
+      setDraft(conversationId, inputValue + emoji);
+    }
+    setShowEmojiPicker(false);
+  };
+
+  // Close emoji picker on outside click
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
 
   const handleSend = useCallback(() => {
     if ((!inputValue.trim() && !pendingFile) || !conversationId) return;
@@ -588,7 +638,7 @@ export default function ChatArea({
               type="button"
               aria-label={t('chat.back')}
               onClick={onBack}
-              className="md:hidden w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-500 hover:text-grey-700 transition-colors cursor-pointer -ml-1"
+              className="md:hidden w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-500 hover:text-grey-700 transition-colors cursor-pointer -ml-1 btn-icon-interactive"
             >
               <ChevronLeft size={20} />
             </button>
@@ -603,32 +653,47 @@ export default function ChatArea({
             <h3 className="text-sm font-semibold text-text">
               {conversationName}
             </h3>
-            <span
-              className={`text-xs flex items-center gap-1 ${
-                wsStatus === 'connected'
-                  ? 'text-leaf-600'
-                  : wsStatus === 'reconnecting' || wsStatus === 'connecting'
-                    ? 'text-amber-500'
-                    : 'text-grey-400'
-              }`}
-            >
+            {isDirect ? (
               <span
-                className={`w-1.5 h-1.5 rounded-full inline-block ${
-                  wsStatus === 'connected'
-                    ? 'bg-leaf-500'
-                    : wsStatus === 'reconnecting' || wsStatus === 'connecting'
-                      ? 'bg-amber-400 animate-pulse'
-                      : 'bg-grey-300'
+                className={`text-xs flex items-center gap-1 ${
+                  isOtherUserOnline ? 'text-leaf-600' : 'text-grey-400'
                 }`}
-              />
-              {wsStatus === 'connected'
-                ? t('chat.online')
-                : wsStatus === 'reconnecting'
-                  ? 'Reconnecting...'
-                  : wsStatus === 'connecting'
-                    ? 'Connecting...'
-                    : 'Offline'}
-            </span>
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full inline-block ${
+                    isOtherUserOnline ? 'bg-leaf-500' : 'bg-grey-300'
+                  }`}
+                />
+                {isOtherUserOnline ? t('chat.online') : t('chat.offline')}
+              </span>
+            ) : (
+              <span
+                className={`text-xs flex items-center gap-1 ${
+                  wsStatus === 'connected'
+                    ? 'text-leaf-600'
+                    : wsStatus === 'reconnecting' || wsStatus === 'connecting'
+                      ? 'text-amber-500'
+                      : 'text-grey-400'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full inline-block ${
+                    wsStatus === 'connected'
+                      ? 'bg-leaf-500'
+                      : wsStatus === 'reconnecting' || wsStatus === 'connecting'
+                        ? 'bg-amber-400 animate-pulse'
+                        : 'bg-grey-300'
+                  }`}
+                />
+                {wsStatus === 'connected'
+                  ? t('chat.connected')
+                  : wsStatus === 'reconnecting'
+                    ? t('chat.reconnecting')
+                    : wsStatus === 'connecting'
+                      ? t('chat.connecting')
+                      : t('chat.offline')}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -638,7 +703,7 @@ export default function ChatArea({
               setShowSearch(!showSearch);
               if (showSearch) setSearchQuery('');
             }}
-            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+            className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer btn-icon-interactive ${
               showSearch
                 ? 'bg-primary-100 text-primary-600'
                 : 'hover:bg-grey-100 text-grey-400 hover:text-grey-600'
@@ -648,7 +713,7 @@ export default function ChatArea({
           </button>
           <button
             type="button"
-            className="w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors cursor-pointer btn-icon-interactive"
           >
             <MoreHorizontal size={18} />
           </button>
@@ -657,7 +722,7 @@ export default function ChatArea({
 
       {/* Search bar */}
       {showSearch && (
-        <div className="px-6 py-2 bg-surface border-b border-border">
+        <div className="px-6 py-2 bg-surface border-b border-border animate-search-bar-in">
           <div className="relative">
             <Search
               size={14}
@@ -665,7 +730,7 @@ export default function ChatArea({
             />
             <input
               type="text"
-              placeholder="Search messages..."
+              placeholder={t('chat.searchMessages')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
@@ -684,8 +749,8 @@ export default function ChatArea({
           {searchQuery.length >= 2 && (
             <p className="text-[11px] text-grey-400 mt-1">
               {isSearching
-                ? 'Searching...'
-                : `${searchData?.data?.length ?? 0} result${(searchData?.data?.length ?? 0) !== 1 ? 's' : ''}`}
+                ? t('chat.searching')
+                : t('chat.resultCount', { count: searchData?.data?.length ?? 0 })}
             </p>
           )}
         </div>
@@ -705,7 +770,7 @@ export default function ChatArea({
               return (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <Search size={20} className="text-grey-300 mb-2" />
-                  <p className="text-sm text-grey-500">No results found</p>
+                  <p className="text-sm text-grey-500">{t('chat.noResults')}</p>
                 </div>
               );
             }
@@ -728,9 +793,9 @@ export default function ChatArea({
                 <div className="w-12 h-12 rounded-xl bg-grey-100 flex items-center justify-center mb-3">
                   <MessageSquare size={20} className="text-grey-400" />
                 </div>
-                <p className="text-sm text-grey-500">No messages yet</p>
+                <p className="text-sm text-grey-500">{t('chat.noMessages')}</p>
                 <p className="text-xs text-grey-400 mt-1">
-                  Send the first message!
+                  {t('chat.sendFirst')}
                 </p>
               </div>
             );
@@ -755,27 +820,16 @@ export default function ChatArea({
 
       {/* Typing indicator */}
       {typingUsers.length > 0 && (
-        <div className="px-6 py-1.5 text-xs text-grey-500 flex items-center gap-1.5">
-          <span className="flex gap-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-1.5 h-1.5 rounded-full bg-grey-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-          </span>
-          <span>
-            {typingUsers.length === 1
-              ? `Someone is typing...`
-              : `${typingUsers.length} people are typing...`}
-          </span>
-        </div>
+        <TypingIndicator typingUserIds={typingUsers} t={t} />
       )}
 
       {/* Reply banner */}
       {replyingTo && !editingMessage && (
-        <div className="px-6 py-2 bg-grey-50 border-t border-grey-200 flex items-center justify-between">
+        <div className="px-6 py-2 bg-grey-50 border-t border-grey-200 flex items-center justify-between animate-banner-in">
           <div className="flex items-center gap-2 text-sm text-grey-600 min-w-0">
             <CornerUpLeft size={14} className="shrink-0" />
             <span className="truncate">
-              Replying to <strong>{replyingTo.senderName}</strong>:{' '}
+              {t('chat.replyingTo')} <strong>{replyingTo.senderName}</strong>:{' '}
               {replyingTo.content}
             </span>
           </div>
@@ -791,10 +845,10 @@ export default function ChatArea({
 
       {/* Editing banner */}
       {editingMessage && (
-        <div className="px-6 py-2 bg-primary-50 border-t border-primary-200 flex items-center justify-between">
+        <div className="px-6 py-2 bg-primary-50 border-t border-primary-200 flex items-center justify-between animate-banner-in">
           <div className="flex items-center gap-2 text-sm text-primary-700">
             <Edit3 size={14} />
-            <span>Editing message</span>
+            <span>{t('chat.editingMessage')}</span>
           </div>
           <button
             type="button"
@@ -808,7 +862,7 @@ export default function ChatArea({
 
       {/* Pending file preview */}
       {pendingFile && (
-        <div className="px-6 py-2 bg-grey-50 border-t border-grey-200 flex items-center justify-between">
+        <div className="px-6 py-2 bg-grey-50 border-t border-grey-200 flex items-center justify-between animate-banner-in">
           <div className="flex items-center gap-2 text-sm text-grey-600 min-w-0">
             {pendingFile.type.startsWith('image/') ? (
               <img
@@ -847,21 +901,42 @@ export default function ChatArea({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-9 h-9 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors shrink-0 cursor-pointer"
+            className="w-9 h-9 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 shrink-0 cursor-pointer btn-icon-interactive"
           >
             <Paperclip size={20} />
           </button>
-          <button
-            type="button"
-            className="w-9 h-9 rounded-full hover:bg-grey-100 flex items-center justify-center text-grey-400 hover:text-grey-600 transition-colors shrink-0 cursor-pointer"
-          >
-            <Smile size={20} />
-          </button>
+          <div className="relative" ref={emojiPickerRef}>
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 cursor-pointer btn-icon-interactive ${
+                showEmojiPicker
+                  ? 'bg-primary-100 text-primary-600'
+                  : 'hover:bg-grey-100 text-grey-400 hover:text-grey-600'
+              }`}
+            >
+              <Smile size={20} />
+            </button>
+            {showEmojiPicker && (
+              <div className="absolute bottom-full mb-2 left-0 bg-surface border border-border rounded-xl shadow-lg p-2 flex flex-wrap gap-1 w-[220px] z-10 animate-popup-in" style={{ transformOrigin: 'bottom left' }}>
+                {QUICK_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleEmojiInsert(emoji)}
+                    className="w-9 h-9 rounded-lg hover:bg-grey-100 flex items-center justify-center text-lg cursor-pointer transition-colors"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <input
             type="text"
             placeholder={
               editingMessage
-                ? 'Edit your message...'
+                ? t('chat.editPlaceholder')
                 : t('chat.whisper', {
                     name: conversationName.split(' ')[0],
                   })
@@ -881,7 +956,7 @@ export default function ChatArea({
               onClick={handleSend}
               disabled={!inputValue.trim() || updateMutation.isPending}
               className={`
-                w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer
+                w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer btn-send-interactive
                 ${inputValue.trim() ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm' : 'bg-grey-100 text-grey-400'}
               `}
             >
@@ -893,7 +968,7 @@ export default function ChatArea({
               onClick={handleSend}
               disabled={(!inputValue.trim() && !pendingFile) || sendMutation.isPending}
               className={`
-                w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer
+                w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer btn-send-interactive
                 ${
                   inputValue.trim() || pendingFile
                     ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm'

@@ -3,7 +3,10 @@ import ChatArea from '../components/chat/ChatArea';
 import ContactDetails from '../components/chat/ContactDetails';
 import ConversationList from '../components/chat/ConversationList';
 import { useConversation } from '../hooks/useConversations';
+import { useUser } from '../hooks/useUsers';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useIsUserOnline } from '../stores/usePresenceStore';
 
 export default function Chat() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -17,7 +20,17 @@ export default function Chat() {
   const { status: wsStatus, sendEvent } = useWebSocket();
   const { data: conversationData } = useConversation(selectedId ?? '');
   const conversation = conversationData?.data;
-  const selectedName = conversation?.name ?? null;
+
+  // Resolve DM name: show the other participant's username instead of null
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const otherParticipant =
+    conversation?.type === 'direct' && !conversation?.name
+      ? conversation.participants?.find((p) => p.user_id !== currentUserId)
+      : null;
+  const { data: otherUser } = useUser(otherParticipant?.user_id ?? '');
+  const isOtherUserOnline = useIsUserOnline(otherParticipant?.user_id ?? '');
+  const isDirect = conversation?.type === 'direct';
+  const selectedName = conversation?.name ?? otherUser?.username ?? null;
 
   const handleSelect = (id: string) => {
     setSelectedId(id);
@@ -61,7 +74,7 @@ export default function Chat() {
           md:flex md:flex-1 min-w-0
         `}
       >
-        <ChatArea conversationId={selectedId} conversationName={selectedName} wsStatus={wsStatus} sendWsEvent={sendEvent} onBack={handleBack} />
+        <ChatArea conversationId={selectedId} conversationName={selectedName} wsStatus={wsStatus} sendWsEvent={sendEvent} onBack={handleBack} isOtherUserOnline={isOtherUserOnline} isDirect={isDirect} />
       </div>
 
       {/* Contact details: hidden on mobile, animated on desktop */}
@@ -72,6 +85,7 @@ export default function Chat() {
           <ContactDetails
             conversationId={selectedId}
             onClose={handleCloseDetails}
+            isOtherUserOnline={isOtherUserOnline}
           />
         </div>
       )}
