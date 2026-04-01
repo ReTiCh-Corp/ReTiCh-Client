@@ -1,5 +1,6 @@
 import { Check, Loader2, Search, UserPlus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { ApiError } from '../../api/client';
 import type { User } from '../../api/users';
@@ -29,6 +30,7 @@ export default function AddParticipantModal({
   onClose,
   isClosing,
 }: AddParticipantModalProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -78,10 +80,10 @@ export default function AddParticipantModal({
       onClose();
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
-        setErrorMessage("You don't have permission to add members");
+        setErrorMessage(t('chat.permissionAdd'));
       } else {
         setErrorMessage(
-          err instanceof Error ? err.message : 'An error occurred',
+          err instanceof Error ? err.message : t('chat.modal.error'),
         );
       }
     }
@@ -114,7 +116,7 @@ export default function AddParticipantModal({
             <div className="flex items-center gap-2.5">
               <UserPlus size={20} className="text-primary-600" />
               <h3 className="text-lg font-display font-bold text-text">
-                Add members
+                {t('chat.addMembers')}
               </h3>
             </div>
             <button
@@ -136,7 +138,7 @@ export default function AddParticipantModal({
               />
               <input
                 type="text"
-                placeholder="Search users..."
+                placeholder={t('chat.searchUsers')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
@@ -198,7 +200,7 @@ export default function AddParticipantModal({
               )}
               {!isLoading && availableUsers.length === 0 && (
                 <p className="text-sm text-grey-400 text-center py-4">
-                  No users found
+                  {t('chat.noUsersFound')}
                 </p>
               )}
             </div>
@@ -219,7 +221,7 @@ export default function AddParticipantModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-grey-600 hover:bg-grey-100 transition-colors cursor-pointer"
             >
-              Cancel
+              {t('chat.cancel')}
             </button>
             <button
               type="button"
@@ -232,8 +234,10 @@ export default function AddParticipantModal({
               }`}
             >
               {addMutation.isPending
-                ? 'Adding...'
-                : `Add ${selectedUsers.length > 0 ? `(${selectedUsers.length})` : ''}`}
+                ? t('chat.adding')
+                : selectedUsers.length > 0
+                  ? t('chat.addCount', { count: selectedUsers.length })
+                  : t('chat.addMember')}
             </button>
           </div>
         </div>

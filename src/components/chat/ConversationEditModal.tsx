@@ -1,5 +1,6 @@
 import { Pencil, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import type { ConversationDetail } from '../../api/conversations';
 import { useUpdateConversation } from '../../hooks/useConversations';
@@ -15,6 +16,7 @@ export default function ConversationEditModal({
   onClose,
   isClosing,
 }: ConversationEditModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(conversation.name ?? '');
   const [description, setDescription] = useState(
     conversation.description ?? '',
@@ -75,7 +77,7 @@ export default function ConversationEditModal({
             <div className="flex items-center gap-2">
               <Pencil size={18} className="text-grey-500" />
               <h3 className="text-lg font-display font-bold text-text">
-                Edit conversation
+                {t('chat.editConversation')}
               </h3>
             </div>
             <button
@@ -92,13 +94,13 @@ export default function ConversationEditModal({
             {/* Name */}
             <div className="px-6 pt-5 pb-4">
               <span className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3 block">
-                Name
+                {t('chat.name')}
               </span>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Conversation name..."
+                placeholder={t('chat.namePlaceholder')}
                 className="w-full px-4 py-2.5 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
               />
             </div>
@@ -106,13 +108,13 @@ export default function ConversationEditModal({
             {/* Description */}
             <div className="px-6 pb-4">
               <span className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3 block">
-                Description
+                {t('chat.description')}
               </span>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add a description..."
+                placeholder={t('chat.descriptionPlaceholder')}
                 className="w-full px-4 py-2.5 rounded-xl bg-grey-50 border border-border-light text-sm text-text placeholder:text-grey-400 outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-all"
               />
             </div>
@@ -120,7 +122,7 @@ export default function ConversationEditModal({
             {/* Avatar URL */}
             <div className="px-6 pb-4">
               <span className="text-[11px] font-semibold text-grey-500 uppercase tracking-wider mb-3 block">
-                Avatar URL
+                {t('chat.avatarUrl')}
               </span>
               <input
                 type="text"
@@ -139,7 +141,7 @@ export default function ConversationEditModal({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-sm font-medium text-grey-600 hover:bg-grey-100 transition-colors cursor-pointer"
             >
-              Cancel
+              {t('chat.cancel')}
             </button>
             <button
               type="button"
@@ -151,7 +153,7 @@ export default function ConversationEditModal({
                   : 'bg-primary-300 text-white cursor-not-allowed'
               }`}
             >
-              {updateMutation.isPending ? 'Saving...' : 'Save'}
+              {updateMutation.isPending ? t('chat.saving') : t('chat.save')}
             </button>
           </div>
         </div>

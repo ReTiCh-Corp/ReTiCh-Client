@@ -1,4 +1,5 @@
 import { Crown, Loader2, Shield, UserMinus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Participant } from '../../api/conversations';
 
 function getInitials(name: string): string {
@@ -12,16 +13,16 @@ function getInitials(name: string): string {
 
 const ROLE_CONFIG: Record<
   string,
-  { icon: typeof Crown; label: string; className: string }
+  { icon: typeof Crown; labelKey: string; className: string }
 > = {
   owner: {
     icon: Crown,
-    label: 'Owner',
+    labelKey: 'chat.role.owner',
     className: 'bg-primary-50 text-primary-600 border-primary-100',
   },
   admin: {
     icon: Shield,
-    label: 'Admin',
+    labelKey: 'chat.role.admin',
     className: 'bg-leaf-50 text-leaf-600 border-leaf-200',
   },
 };
@@ -41,6 +42,7 @@ export default function ParticipantList({
   onRemove,
   removingUserId,
 }: ParticipantListProps) {
+  const { t } = useTranslation();
   const canManage = currentUserRole === 'owner' || currentUserRole === 'admin';
 
   return (
@@ -70,7 +72,7 @@ export default function ParticipantList({
                 <span className="text-sm text-text truncate">
                   {displayName}
                   {isCurrentUser && (
-                    <span className="text-grey-400 ml-1">(you)</span>
+                    <span className="text-grey-400 ml-1">{t('chat.youIndicator')}</span>
                   )}
                 </span>
                 {roleConfig && (
@@ -78,7 +80,7 @@ export default function ParticipantList({
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider shrink-0 ${roleConfig.className}`}
                   >
                     {RoleIcon && <RoleIcon size={10} />}
-                    {roleConfig.label}
+                    {t(roleConfig.labelKey)}
                   </span>
                 )}
               </div>
