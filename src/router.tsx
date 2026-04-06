@@ -1,4 +1,10 @@
-import { createBrowserRouter, Outlet, type RouteObject } from 'react-router-dom';
+import { AuthProvider } from '@retish/auth/react';
+import {
+  createBrowserRouter,
+  Outlet,
+  type RouteObject,
+} from 'react-router-dom';
+import { auth } from './auth';
 import AuthGuard from './components/guards/AuthGuard';
 import OnboardingGuard from './components/guards/OnboardingGuard';
 import AppLayout from './components/layout/AppLayout';
@@ -12,22 +18,13 @@ import Profile from './pages/Profile';
 import ProfileEdit from './pages/ProfileEdit';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
-import { ReTiChAuth } from "@retish/auth"
-import { AuthProvider } from "@retish/auth/react"
-
-const auth = new ReTiChAuth({
-  baseUrl: import.meta.env.VITE_AUTH_BASE_URL,
-  clientId: import.meta.env.VITE_AUTH_CLIENT_ID,
-  clientSecret: import.meta.env.VITE_AUTH_CLIENT_SECRET,
-  redirectUri: import.meta.env.VITE_AUTH_REDIRECT_URI,
-})
 
 function Root() {
   return (
     <AuthProvider auth={auth}>
       <Outlet />
     </AuthProvider>
-  )
+  );
 }
 
 export const routes: RouteObject[] = [

@@ -1,15 +1,19 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Message } from '../api/messages';
 import type { PaginationMeta } from '../api/conversations';
 import { WS_ENDPOINT } from '../api/endpoints';
+import type { Message } from '../api/messages';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useMessageStore } from '../stores/useMessageStore';
 import { usePresenceStore } from '../stores/usePresenceStore';
 import { conversationKeys } from './useConversations';
 import { messageKeys } from './useMessages';
 
-export type WSStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
+export type WSStatus =
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'reconnecting';
 
 interface WSEvent {
   type: string;
@@ -110,6 +114,10 @@ export function useWebSocket() {
               };
             },
           );
+          // Invalidate attachments so receivers see newly uploaded files
+          queryClient.invalidateQueries({
+            queryKey: ['attachments', updatedMessage.id],
+          });
           break;
         }
 
@@ -165,15 +173,21 @@ export function useWebSocket() {
         }
 
         case 'typing.stop': {
-          const { user_id: stoppedUserId } = event.payload as { user_id: string };
+          const { user_id: stoppedUserId } = event.payload as {
+            user_id: string;
+          };
           if (stoppedUserId) {
-            useMessageStore.getState().removeTypingUser(conversationId, stoppedUserId);
+            useMessageStore
+              .getState()
+              .removeTypingUser(conversationId, stoppedUserId);
           }
           break;
         }
 
         case 'presence.online': {
-          const { user_id: onlineUserId } = event.payload as { user_id: string };
+          const { user_id: onlineUserId } = event.payload as {
+            user_id: string;
+          };
           if (onlineUserId) {
             usePresenceStore.getState().setOnline(onlineUserId);
           }
@@ -181,7 +195,9 @@ export function useWebSocket() {
         }
 
         case 'presence.offline': {
-          const { user_id: offlineUserId } = event.payload as { user_id: string };
+          const { user_id: offlineUserId } = event.payload as {
+            user_id: string;
+          };
           if (offlineUserId) {
             usePresenceStore.getState().setOffline(offlineUserId);
           }
@@ -189,7 +205,9 @@ export function useWebSocket() {
         }
 
         case 'presence.snapshot': {
-          const { online_user_ids } = event.payload as { online_user_ids: string[] };
+          const { online_user_ids } = event.payload as {
+            online_user_ids: string[];
+          };
           if (online_user_ids) {
             usePresenceStore.getState().setBulkOnline(online_user_ids);
           }
@@ -239,7 +257,7 @@ export function useWebSocket() {
 
       // Exponential backoff reconnect
       const delay = Math.min(
-        INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttemptRef.current),
+        INITIAL_RECONNECT_DELAY * 2 ** reconnectAttemptRef.current,
         MAX_RECONNECT_DELAY,
       );
       reconnectAttemptRef.current += 1;

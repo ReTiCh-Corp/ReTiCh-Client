@@ -1,5 +1,5 @@
+import { auth } from '../auth';
 import { useAuthStore } from '../stores/useAuthStore';
-import { AUTH_ENDPOINTS } from './endpoints';
 
 function getBaseUrl(): string {
   return import.meta.env.VITE_API_BASE_URL;
@@ -11,27 +11,18 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
 };
 
 async function refreshAccessToken(): Promise<string | null> {
-  const { refreshToken, setTokens, logout } = useAuthStore.getState();
+  const { logout, setTokens } = useAuthStore.getState();
 
-  if (!refreshToken) {
+  // Use the SDK's getAccessToken() which handles refresh internally
+  const newToken = await auth.getAccessToken();
+  if (!newToken) {
     logout();
     return null;
   }
 
-  const response = await fetch(`${getBaseUrl()}${AUTH_ENDPOINTS.REFRESH}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  });
-
-  if (!response.ok) {
-    logout();
-    return null;
-  }
-
-  const data = await response.json();
-  setTokens(data.accessToken, data.refreshToken);
-  return data.accessToken;
+  // Keep the Zustand store in sync (refresh token managed by the SDK)
+  setTokens(newToken, '');
+  return newToken;
 }
 
 export async function apiClient<T>(
@@ -39,7 +30,10 @@ export async function apiClient<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   const { body, skipAuth = false, headers: customHeaders, ...rest } = options;
-  const { accessToken } = useAuthStore.getState();
+  // Prefer the SDK's access token (auto-refreshed) over the stale Zustand value
+  const sdkToken = await auth.getAccessToken();
+  const { accessToken: storedToken } = useAuthStore.getState();
+  const accessToken = sdkToken ?? storedToken;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
