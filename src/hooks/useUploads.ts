@@ -32,6 +32,12 @@ export function useUploadFile() {
       conversationId: string;
       file: File;
     }) => uploadFile(messageId, file),
+    onSuccess: (data, variables) => {
+      // Populate cache immediately so MessageContent renders without waiting for a refetch
+      queryClient.setQueryData(uploadKeys.attachments(variables.messageId), {
+        data: [data.data],
+      });
+    },
     onSettled: (_data, _err, variables) => {
       queryClient.invalidateQueries({
         queryKey: uploadKeys.attachments(variables.messageId),

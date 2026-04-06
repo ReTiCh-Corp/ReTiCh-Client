@@ -25,7 +25,7 @@ import {
   useUpdateMessage,
 } from '../../hooks/useMessages';
 import { useAddReaction, useRemoveReaction, useUpdateReadReceipt } from '../../hooks/useSocial';
-import { useUploadFile } from '../../hooks/useUploads';
+import { useAttachments, useUploadFile } from '../../hooks/useUploads';
 import { useUser } from '../../hooks/useUsers';
 import type { WSStatus } from '../../hooks/useWebSocket';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -62,6 +62,45 @@ function formatMessageTime(dateStr: string, t: (key: string, opts?: Record<strin
 }
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+function MessageContent({ msg, isMe }: { msg: Message; isMe: boolean }) {
+  const hasAttachment = msg.type !== 'text' && msg.type !== 'system';
+  const { data } = useAttachments(hasAttachment ? msg.id : '');
+  const attachments = data?.data ?? [];
+
+  if (attachments.length > 0) {
+    return (
+      <div className="flex flex-col gap-1">
+        {attachments.map((a) =>
+          a.file_type.startsWith('image/') ? (
+            <img
+              key={a.id}
+              src={a.file_url}
+              alt={a.file_name}
+              className="max-w-xs rounded-lg cursor-pointer"
+              onClick={() => window.open(a.file_url, '_blank')}
+            />
+          ) : (
+            <a
+              key={a.id}
+              href={a.file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-2 text-sm underline ${isMe ? 'text-white' : 'text-primary-600'}`}
+            >
+              📎 {a.file_name}
+            </a>
+          )
+        )}
+        {msg.content && !msg.content.startsWith('📎') && (
+          <span>{msg.content}</span>
+        )}
+      </div>
+    );
+  }
+
+  return <span>{msg.content}</span>;
+}
 
 function MessageBubble({
   msg,
@@ -192,7 +231,7 @@ function MessageBubble({
               setShowMenu(true);
             }}
           >
-            {msg.content}
+            <MessageContent msg={msg} isMe={isMe} />
           </div>
 
           {/* Reactions display */}
@@ -544,10 +583,18 @@ export default function ChatArea({
       const messageContent = inputValue.trim() || (fileToUpload ? `📎 ${fileToUpload.name}` : '');
       if (!messageContent) return;
 
+      const messageType = fileToUpload
+        ? fileToUpload.type.startsWith('image/') ? 'image'
+        : fileToUpload.type.startsWith('video/') ? 'video'
+        : fileToUpload.type.startsWith('audio/') ? 'audio'
+        : 'file'
+        : 'text';
+
       sendMutation.mutate(
         {
           conversationId,
           input: {
+            type: messageType,
             content: messageContent,
             reply_to_id: replyingTo?.id,
           },

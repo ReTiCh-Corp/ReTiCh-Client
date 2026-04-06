@@ -56,15 +56,26 @@ export function useWebSocket() {
               if (firstMsg && firstMsg.conversation_id !== conversationId) {
                 return old;
               }
-              // Avoid duplicates (optimistic update might have added it)
+              // Exact ID match — already in cache (e.g. from a previous WS delivery)
               if (old.data.some((m) => m.id === newMessage.id)) {
-                // Replace the temp/optimistic version with the real one
                 return {
                   ...old,
                   data: old.data.map((m) =>
                     m.id === newMessage.id ? newMessage : m,
                   ),
                 };
+              }
+              // Replace optimistic (temp-*) placeholder from the same sender with same content
+              const tempIndex = old.data.findIndex(
+                (m) =>
+                  m.id.startsWith('temp-') &&
+                  m.sender_id === newMessage.sender_id &&
+                  m.content === newMessage.content,
+              );
+              if (tempIndex !== -1) {
+                const newData = [...old.data];
+                newData[tempIndex] = newMessage;
+                return { ...old, data: newData };
               }
               return {
                 ...old,
