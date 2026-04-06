@@ -1,6 +1,15 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import i18n from '../../i18n';
+import en from '../../i18n/locales/en.json';
+
+const t = (key: keyof typeof en, opts?: Record<string, unknown>): string => {
+  const raw = en[key] ?? key;
+  if (!opts) return raw;
+  return raw.replace(/\{\{(\w+)\}\}/g, (_, k: string) =>
+    opts[k] !== undefined ? String(opts[k]) : `{{${k}}}`,
+  );
+};
+
 import { checkUsernameAvailability } from '../../api/users';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
 import StepUsername from './StepUsername';
@@ -27,14 +36,20 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
+    const input = screen.getByPlaceholderText(
+      t('onboarding.username.placeholder'),
+    );
     await userEvent.type(input, 'valid_user');
 
     // Advance past debounce
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText(i18n.t('onboarding.username.available', { username: 'valid_user' }))).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          t('onboarding.username.available', { username: 'valid_user' }),
+        ),
+      ).toBeInTheDocument();
     });
 
     expect(mockedCheck).toHaveBeenCalledWith('valid_user');
@@ -45,13 +60,19 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
+    const input = screen.getByPlaceholderText(
+      t('onboarding.username.placeholder'),
+    );
     await userEvent.type(input, 'taken_user');
 
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText(i18n.t('onboarding.username.taken', { username: 'taken_user' }))).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          t('onboarding.username.taken', { username: 'taken_user' }),
+        ),
+      ).toBeInTheDocument();
     });
   });
 
@@ -59,7 +80,9 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
+    const input = screen.getByPlaceholderText(
+      t('onboarding.username.placeholder'),
+    );
     await userEvent.type(input, 'ab');
 
     vi.advanceTimersByTime(600);
@@ -72,7 +95,9 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
+    const input = screen.getByPlaceholderText(
+      t('onboarding.username.placeholder'),
+    );
     await userEvent.type(input, 'abc');
 
     // Not enough time elapsed — should not have been called yet
@@ -92,16 +117,24 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
+    const input = screen.getByPlaceholderText(
+      t('onboarding.username.placeholder'),
+    );
     await userEvent.type(input, 'taken_user');
 
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText(i18n.t('onboarding.username.taken', { username: 'taken_user' }))).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          t('onboarding.username.taken', { username: 'taken_user' }),
+        ),
+      ).toBeInTheDocument();
     });
 
-    const button = screen.getByRole('button', { name: i18n.t('onboarding.continue') });
+    const button = screen.getByRole('button', {
+      name: t('onboarding.continue'),
+    });
     expect(button).toBeDisabled();
   });
 
@@ -110,16 +143,24 @@ describe('StepUsername', () => {
     const onNext = vi.fn();
     render(<StepUsername onNext={onNext} />);
 
-    const input = screen.getByPlaceholderText(i18n.t('onboarding.username.placeholder'));
+    const input = screen.getByPlaceholderText(
+      t('onboarding.username.placeholder'),
+    );
     await userEvent.type(input, 'good_name');
 
     vi.advanceTimersByTime(600);
 
     await waitFor(() => {
-      expect(screen.getByText(i18n.t('onboarding.username.available', { username: 'good_name' }))).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          t('onboarding.username.available', { username: 'good_name' }),
+        ),
+      ).toBeInTheDocument();
     });
 
-    const button = screen.getByRole('button', { name: i18n.t('onboarding.continue') });
+    const button = screen.getByRole('button', {
+      name: t('onboarding.continue'),
+    });
     expect(button).not.toBeDisabled();
     await userEvent.click(button);
     expect(onNext).toHaveBeenCalled();

@@ -1,6 +1,14 @@
+vi.mock('@retish/auth', () => ({
+  ReTiChAuth: class {
+    getAccessToken = vi.fn().mockResolvedValue(null);
+  },
+}));
+
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import i18n from '../i18n';
+import en from '../i18n/locales/en.json';
+
+const t = (key: keyof typeof en) => en[key];
 
 vi.mock('../hooks/useProfile', () => ({
   useMyProfile: () => ({ data: null, isLoading: false, isError: true }),
@@ -16,8 +24,8 @@ describe('ProfileEdit', () => {
         <ProfileEdit />
       </MemoryRouter>,
     );
-    expect(screen.getByText(i18n.t('profile.loadError'))).toBeInTheDocument();
-    expect(screen.getByText(i18n.t('profile.backToProfile'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.loadError'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.backToProfile'))).toBeInTheDocument();
   });
 
   it('exports a valid component', () => {

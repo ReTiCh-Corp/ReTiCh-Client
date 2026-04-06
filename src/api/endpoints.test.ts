@@ -26,38 +26,38 @@ describe('endpoints', () => {
 
   describe('USER_ENDPOINTS', () => {
     it('has correct me path', () => {
-      expect(USER_ENDPOINTS.ME).toBe('/api/v1/user/users/me');
+      expect(USER_ENDPOINTS.ME).toBe('/api/v1/users/me');
     });
 
     it('generates correct by-id path', () => {
-      expect(USER_ENDPOINTS.BY_ID('123')).toBe('/api/v1/user/users/123');
+      expect(USER_ENDPOINTS.BY_ID('123')).toBe('/api/v1/users/123');
     });
   });
 
   describe('CONVERSATION_ENDPOINTS', () => {
     it('has correct list path', () => {
-      expect(CONVERSATION_ENDPOINTS.LIST).toBe('/api/v1/messaging/conversations');
+      expect(CONVERSATION_ENDPOINTS.LIST).toBe('/api/v1/conversations');
     });
 
     it('generates correct by-id path', () => {
       expect(CONVERSATION_ENDPOINTS.BY_ID('456')).toBe(
-        '/api/v1/messaging/conversations/456',
+        '/api/v1/conversations/456',
       );
     });
 
     it('has correct create path', () => {
-      expect(CONVERSATION_ENDPOINTS.CREATE).toBe('/api/v1/messaging/conversations');
+      expect(CONVERSATION_ENDPOINTS.CREATE).toBe('/api/v1/conversations');
     });
 
     it('generates correct participants path', () => {
       expect(CONVERSATION_ENDPOINTS.PARTICIPANTS('456')).toBe(
-        '/api/v1/messaging/conversations/456/participants',
+        '/api/v1/conversations/456/participants',
       );
     });
 
     it('generates correct participant path', () => {
       expect(CONVERSATION_ENDPOINTS.PARTICIPANT('456', '789')).toBe(
-        '/api/v1/messaging/conversations/456/participants/789',
+        '/api/v1/conversations/456/participants/789',
       );
     });
   });
@@ -65,13 +65,13 @@ describe('endpoints', () => {
   describe('MESSAGE_ENDPOINTS', () => {
     it('generates correct by-conversation path', () => {
       expect(MESSAGE_ENDPOINTS.BY_CONVERSATION('789')).toBe(
-        '/api/v1/messaging/conversations/789/messages',
+        '/api/v1/conversations/789/messages',
       );
     });
 
     it('generates correct send path', () => {
       expect(MESSAGE_ENDPOINTS.SEND('789')).toBe(
-        '/api/v1/messaging/conversations/789/messages',
+        '/api/v1/conversations/789/messages',
       );
     });
   });

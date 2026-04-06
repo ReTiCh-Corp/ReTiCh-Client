@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import i18n from './i18n';
+import en from './i18n/locales/en.json';
 import { routes } from './router';
 
 vi.mock('@retish/auth', () => ({
@@ -56,14 +56,29 @@ const mockAuthState = {
   logout: vi.fn(),
 };
 
-vi.mock('./stores/useAuthStore', () => ({
-  useAuthStore: vi.fn((selector?: (s: unknown) => unknown) =>
+vi.mock('./stores/useAuthStore', () => {
+  const store = vi.fn((selector?: (s: unknown) => unknown) =>
     selector ? selector(mockAuthState) : mockAuthState,
-  ),
-}));
+  );
+  (store as unknown as Record<string, unknown>).getState = vi.fn(
+    () => mockAuthState,
+  );
+  (store as unknown as Record<string, unknown>).subscribe = vi.fn(() =>
+    vi.fn(),
+  );
+  return { useAuthStore: store };
+});
 
 vi.mock('./hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
+}));
+
+vi.mock('./hooks/useWebSocket', () => ({
+  useWebSocket: () => ({
+    status: 'connected',
+    sendEvent: vi.fn(),
+    disconnect: vi.fn(),
+  }),
 }));
 
 function renderRoute(initialRoute: string) {
@@ -83,16 +98,18 @@ function renderRoute(initialRoute: string) {
 describe('Router', () => {
   it('renders the Login page on /login', () => {
     renderRoute('/login');
-    expect(screen.getByText(i18n.t('login.welcome'))).toBeInTheDocument();
+    expect(screen.getByText(en['login.welcome'])).toBeInTheDocument();
   });
 
   it('renders the Chat page on /chat', () => {
     renderRoute('/chat');
-    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
+    expect(screen.getByText(en['chat.messages'])).toBeInTheDocument();
   });
 
   it('renders the Settings page on /settings', () => {
     renderRoute('/settings');
-    expect(screen.getAllByText(i18n.t('settings.title')).length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText(en['settings.title']).length,
+    ).toBeGreaterThanOrEqual(1);
   });
 });

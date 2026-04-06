@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import i18n from '../i18n';
+import en from '../i18n/locales/en.json';
+
+const t = (key: keyof typeof en) => en[key];
+
 import Settings from './Settings';
 
 describe('Settings', () => {
@@ -10,6 +13,6 @@ describe('Settings', () => {
         <Settings />
       </MemoryRouter>,
     );
-    expect(screen.getByText(i18n.t('settings.title'))).toBeInTheDocument();
+    expect(screen.getByText(t('settings.title'))).toBeInTheDocument();
   });
 });

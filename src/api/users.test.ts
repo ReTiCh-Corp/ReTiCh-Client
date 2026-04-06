@@ -17,7 +17,7 @@ describe('listUsers', () => {
 
     await listUsers();
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/user/users');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/users');
   });
 
   it('appends limit and offset as query params', async () => {
@@ -25,7 +25,9 @@ describe('listUsers', () => {
 
     await listUsers({ limit: 10, offset: 20 });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/user/users?limit=10&offset=20');
+    expect(mockedApiClient).toHaveBeenCalledWith(
+      '/api/v1/users?limit=10&offset=20',
+    );
   });
 
   it('appends only limit when offset is not provided', async () => {
@@ -33,7 +35,7 @@ describe('listUsers', () => {
 
     await listUsers({ limit: 5 });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/user/users?limit=5');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/users?limit=5');
   });
 
   it('appends search as query param', async () => {
@@ -41,7 +43,7 @@ describe('listUsers', () => {
 
     await listUsers({ search: 'alice' });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/user/users?search=alice');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/users?search=alice');
   });
 
   it('appends sort as query param', async () => {
@@ -49,7 +51,7 @@ describe('listUsers', () => {
 
     await listUsers({ sort: 'new' });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/user/users?sort=new');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/users?sort=new');
   });
 
   it('appends all params together', async () => {
@@ -58,7 +60,7 @@ describe('listUsers', () => {
     await listUsers({ limit: 10, offset: 0, search: 'bob', sort: 'new' });
 
     expect(mockedApiClient).toHaveBeenCalledWith(
-      '/api/v1/user/users?limit=10&search=bob&sort=new',
+      '/api/v1/users?limit=10&search=bob&sort=new',
     );
   });
 
@@ -67,7 +69,7 @@ describe('listUsers', () => {
 
     await listUsers({ search: '' });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/user/users');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/users');
   });
 
   it('does not append sort when empty string', async () => {
@@ -75,7 +77,7 @@ describe('listUsers', () => {
 
     await listUsers({ sort: '' });
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/user/users');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/users');
   });
 
   it('returns the API response', async () => {

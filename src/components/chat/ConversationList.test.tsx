@@ -1,8 +1,17 @@
+vi.mock('@retish/auth', () => ({
+  ReTiChAuth: class {
+    getAccessToken = vi.fn().mockResolvedValue(null);
+  },
+}));
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-import i18n from '../../i18n';
+import en from '../../i18n/locales/en.json';
+
+const t = (key: keyof typeof en) => en[key];
+
 import { useConversationStore } from '../../stores/useConversationStore';
 import ConversationList from './ConversationList';
 
@@ -65,6 +74,7 @@ const mockUseConversations = vi.fn();
 
 vi.mock('../../hooks/useConversations', () => ({
   useConversations: (...args: unknown[]) => mockUseConversations(...args),
+  useConversation: () => ({ data: null, isLoading: false }),
 }));
 
 vi.mock('../../hooks/useDebounce', () => ({
@@ -101,7 +111,7 @@ describe('ConversationList', () => {
     render(<ConversationList selectedId={null} onSelect={onSelect} />, {
       wrapper: createWrapper(),
     });
-    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
+    expect(screen.getByText(t('chat.messages'))).toBeInTheDocument();
   });
 
   it('renders all conversations', () => {
@@ -143,7 +153,7 @@ describe('ConversationList', () => {
       wrapper: createWrapper(),
     });
 
-    const searchInput = screen.getByPlaceholderText(i18n.t('chat.search'));
+    const searchInput = screen.getByPlaceholderText(t('chat.search'));
     await user.type(searchInput, 'Adrian');
 
     expect(mockUseConversations).toHaveBeenCalledWith({ search: 'Adrian' });
@@ -168,7 +178,7 @@ describe('ConversationList', () => {
       wrapper: createWrapper(),
     });
 
-    const searchInput = screen.getByPlaceholderText(i18n.t('chat.search'));
+    const searchInput = screen.getByPlaceholderText(t('chat.search'));
     await user.type(searchInput, 'Adrian');
 
     expect(screen.getByText('Adriana Hawk')).toBeInTheDocument();
@@ -204,9 +214,7 @@ describe('ConversationList', () => {
       wrapper: createWrapper(),
     });
 
-    expect(
-      screen.queryByText(i18n.t('chat.loadError')),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(t('chat.loadError'))).not.toBeInTheDocument();
   });
 
   it('shows error state', () => {
@@ -220,9 +228,7 @@ describe('ConversationList', () => {
       wrapper: createWrapper(),
     });
 
-    expect(
-      screen.getByText(i18n.t('chat.loadError')),
-    ).toBeInTheDocument();
+    expect(screen.getByText(t('chat.loadError'))).toBeInTheDocument();
   });
 
   it('calls useConversations with undefined when search is empty', () => {

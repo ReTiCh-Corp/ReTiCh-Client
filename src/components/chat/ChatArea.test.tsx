@@ -1,8 +1,23 @@
+vi.mock('@retish/auth', () => ({
+  ReTiChAuth: class {
+    getAccessToken = vi.fn().mockResolvedValue(null);
+  },
+}));
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-import i18n from '../../i18n';
+import en from '../../i18n/locales/en.json';
+
+const t = (key: keyof typeof en, opts?: Record<string, unknown>): string => {
+  const raw = en[key] ?? key;
+  if (!opts) return raw;
+  return raw.replace(/\{\{(\w+)\}\}/g, (_, k: string) =>
+    opts[k] !== undefined ? String(opts[k]) : `{{${k}}}`,
+  );
+};
+
 import ChatArea from './ChatArea';
 
 vi.mock('../../hooks/useMessages', () => ({
@@ -85,6 +100,7 @@ vi.mock('../../hooks/useSocial', () => ({
 
 vi.mock('../../hooks/useUploads', () => ({
   useUploadFile: () => ({ mutate: vi.fn(), isPending: false }),
+  useAttachments: () => ({ data: [], isLoading: false }),
 }));
 
 function createWrapper() {
@@ -99,30 +115,40 @@ function createWrapper() {
 describe('ChatArea', () => {
   it('shows placeholder when no conversation is selected', () => {
     render(
-      <ChatArea conversationId={null} conversationName={null} wsStatus="connected" />,
+      <ChatArea
+        conversationId={null}
+        conversationName={null}
+        wsStatus="connected"
+      />,
       { wrapper: createWrapper() },
     );
-    expect(
-      screen.getByText(i18n.t('chat.selectConversation')),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(i18n.t('chat.startMessaging')),
-    ).toBeInTheDocument();
+    expect(screen.getByText(t('chat.selectConversation'))).toBeInTheDocument();
+    expect(screen.getByText(t('chat.startMessaging'))).toBeInTheDocument();
   });
 
   it('renders the conversation header with name and initials', () => {
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
+      <ChatArea
+        conversationId="conv-1"
+        conversationName="Samantha Smith"
+        wsStatus="connected"
+        isOtherUserOnline={true}
+        isDirect={true}
+      />,
       { wrapper: createWrapper() },
     );
     expect(screen.getByText('Samantha Smith')).toBeInTheDocument();
     expect(screen.getAllByText('SS').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(i18n.t('chat.online'))).toBeInTheDocument();
+    expect(screen.getByText(t('chat.online'))).toBeInTheDocument();
   });
 
   it('renders messages from the API', () => {
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
+      <ChatArea
+        conversationId="conv-1"
+        conversationName="Samantha Smith"
+        wsStatus="connected"
+      />,
       { wrapper: createWrapper() },
     );
     expect(screen.getByText('Hi, how are you?')).toBeInTheDocument();
@@ -131,25 +157,31 @@ describe('ChatArea', () => {
 
   it('renders the input with placeholder containing first name', () => {
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
+      <ChatArea
+        conversationId="conv-1"
+        conversationName="Samantha Smith"
+        wsStatus="connected"
+      />,
       { wrapper: createWrapper() },
     );
     expect(
-      screen.getByPlaceholderText(
-        i18n.t('chat.whisper', { name: 'Samantha' }),
-      ),
+      screen.getByPlaceholderText(t('chat.whisper', { name: 'Samantha' })),
     ).toBeInTheDocument();
   });
 
   it('updates input value when typing', async () => {
     const user = userEvent.setup();
     render(
-      <ChatArea conversationId="conv-1" conversationName="Samantha Smith" wsStatus="connected" />,
+      <ChatArea
+        conversationId="conv-1"
+        conversationName="Samantha Smith"
+        wsStatus="connected"
+      />,
       { wrapper: createWrapper() },
     );
 
     const input = screen.getByPlaceholderText(
-      i18n.t('chat.whisper', { name: 'Samantha' }),
+      t('chat.whisper', { name: 'Samantha' }),
     );
     await user.type(input, 'Hello!');
     expect(input).toHaveValue('Hello!');

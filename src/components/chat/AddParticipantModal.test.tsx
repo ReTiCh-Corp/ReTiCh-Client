@@ -78,7 +78,7 @@ describe('AddParticipantModal', () => {
 
   it('renders search input', () => {
     renderModal();
-    expect(screen.getByPlaceholderText('Search users...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search users…')).toBeInTheDocument();
   });
 
   it('renders available users', () => {
@@ -189,9 +189,7 @@ describe('AddParticipantModal', () => {
   });
 
   it('shows error message when adding participants fails with 403', async () => {
-    mockMutateAsync.mockRejectedValueOnce(
-      new ApiError(403, 'Forbidden'),
-    );
+    mockMutateAsync.mockRejectedValueOnce(new ApiError(403, 'Forbidden'));
 
     const user = userEvent.setup();
     renderModal();
@@ -214,16 +212,14 @@ describe('AddParticipantModal', () => {
     await user.click(screen.getByText('alice'));
     await user.click(screen.getByText('Add (1)'));
 
-    expect(
-      await screen.findByText('Server error'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Server error')).toBeInTheDocument();
   });
 
   it('filters users by search term', async () => {
     const user = userEvent.setup();
     renderModal();
 
-    const searchInput = screen.getByPlaceholderText('Search users...');
+    const searchInput = screen.getByPlaceholderText('Search users…');
     await user.type(searchInput, 'ali');
 
     expect(searchInput).toHaveValue('ali');

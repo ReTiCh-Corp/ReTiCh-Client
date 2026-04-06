@@ -1,6 +1,11 @@
 import { useAuthStore } from '../stores/useAuthStore';
 import { ApiError, apiClient } from './client';
 
+// auth.ts instantiates ReTiChAuth at import time — mock it so tests don't need env vars
+vi.mock('../auth', () => ({
+  auth: { getAccessToken: vi.fn().mockResolvedValue(null) },
+}));
+
 const BASE_URL = 'http://localhost:3000';
 
 beforeAll(() => {
@@ -143,23 +148,18 @@ describe('apiClient', () => {
     });
   });
 
-  it('refreshes token on 401 and retries the request', async () => {
+  it('refreshes token via SDK on 401 and retries the request', async () => {
+    const { auth } = await import('../auth');
+    vi.mocked(auth.getAccessToken)
+      .mockResolvedValueOnce(null) // initial call returns null (no token yet)
+      .mockResolvedValueOnce('new-token'); // refresh call returns new token
+
     useAuthStore.getState().setTokens('expired-token', 'valid-refresh');
 
     mockFetchSequence([
       // First request → 401
-      { ok: false, status: 401 },
-      // Refresh request → success
-      {
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            accessToken: 'new-token',
-            refreshToken: 'new-refresh',
-          }),
-      },
-      // Retry request → success
+      { ok: false, status: 401, json: () => Promise.resolve({}) },
+      // Retry request with new token → success
       {
         ok: true,
         status: 200,
@@ -169,31 +169,15 @@ describe('apiClient', () => {
 
     const result = await apiClient('/test');
     expect(result).toEqual({ data: 'retried' });
-    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it('logs out when refresh token is missing on 401', async () => {
-    useAuthStore
-      .getState()
-      .setTokens('expired-token', null as unknown as string);
-    useAuthStore.setState({ refreshToken: null });
-
-    mockFetchSequence([
-      { ok: false, status: 401, json: () => Promise.resolve({}) },
-    ]);
-
-    await expect(apiClient('/test')).rejects.toThrow(ApiError);
-    expect(useAuthStore.getState().accessToken).toBeNull();
-  });
-
-  it('logs out when refresh request fails', async () => {
+  it('logs out when SDK cannot refresh token on 401', async () => {
+    // auth.getAccessToken returns null → logout triggered
     useAuthStore.getState().setTokens('expired-token', 'bad-refresh');
 
     mockFetchSequence([
-      // First request → 401
       { ok: false, status: 401, json: () => Promise.resolve({}) },
-      // Refresh request → fails
-      { ok: false, status: 401 },
     ]);
 
     await expect(apiClient('/test')).rejects.toThrow(ApiError);

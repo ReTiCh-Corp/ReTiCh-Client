@@ -71,10 +71,10 @@ describe('ConversationEditModal', () => {
 
   it('pre-fills name, description, and avatar URL inputs', () => {
     renderModal();
-    expect(screen.getByPlaceholderText('Conversation name...')).toHaveValue(
+    expect(screen.getByPlaceholderText('Conversation name…')).toHaveValue(
       'Team Chat',
     );
-    expect(screen.getByPlaceholderText('Add a description...')).toHaveValue(
+    expect(screen.getByPlaceholderText('Add a description…')).toHaveValue(
       'Our team group',
     );
     expect(
@@ -86,7 +86,7 @@ describe('ConversationEditModal', () => {
     const user = userEvent.setup();
     renderModal();
 
-    const nameInput = screen.getByPlaceholderText('Conversation name...');
+    const nameInput = screen.getByPlaceholderText('Conversation name…');
     await user.clear(nameInput);
 
     expect(screen.getByText('Save').closest('button')).toBeDisabled();
@@ -96,7 +96,7 @@ describe('ConversationEditModal', () => {
     const user = userEvent.setup();
     const { onClose } = renderModal();
 
-    const nameInput = screen.getByPlaceholderText('Conversation name...');
+    const nameInput = screen.getByPlaceholderText('Conversation name…');
     await user.clear(nameInput);
     await user.type(nameInput, 'Updated Name');
 
@@ -150,7 +150,7 @@ describe('ConversationEditModal', () => {
     const user = userEvent.setup();
     renderModal();
 
-    const nameInput = screen.getByPlaceholderText('Conversation name...');
+    const nameInput = screen.getByPlaceholderText('Conversation name…');
     await user.clear(nameInput);
     await user.type(nameInput, '   ');
 
@@ -191,7 +191,7 @@ describe('ConversationEditModal', () => {
       },
     });
 
-    const descInput = screen.getByPlaceholderText('Add a description...');
+    const descInput = screen.getByPlaceholderText('Add a description…');
     await user.type(descInput, 'New desc');
 
     const avatarInput = screen.getByPlaceholderText(

@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import i18n from '../i18n';
+import en from '../i18n/locales/en.json';
+
+const t = (key: keyof typeof en) => en[key];
+
 import Profile from './Profile';
 
 vi.mock('../hooks/useProfile', () => ({
@@ -64,10 +67,10 @@ describe('Profile', () => {
         <Profile />
       </MemoryRouter>,
     );
-    expect(screen.getByText(i18n.t('profile.phone'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.phone'))).toBeInTheDocument();
     expect(screen.getByText('+33 6 12 34 56 78')).toBeInTheDocument();
-    expect(screen.getByText(i18n.t('profile.status'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.status'))).toBeInTheDocument();
     expect(screen.getByText('Sky is the limit')).toBeInTheDocument();
-    expect(screen.getByText(i18n.t('profile.memberSince'))).toBeInTheDocument();
+    expect(screen.getByText(t('profile.memberSince'))).toBeInTheDocument();
   });
 });

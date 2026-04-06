@@ -1,8 +1,17 @@
+vi.mock('@retish/auth', () => ({
+  ReTiChAuth: class {
+    getAccessToken = vi.fn().mockResolvedValue(null);
+  },
+}));
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-import i18n from '../i18n';
+import en from '../i18n/locales/en.json';
+
+const t = (key: keyof typeof en) => en[key];
+
 import Chat from './Chat';
 
 vi.mock('../hooks/useConversations', () => ({
@@ -150,7 +159,7 @@ function createWrapper() {
 describe('Chat', () => {
   it('renders conversation list and chat area', () => {
     render(<Chat />, { wrapper: createWrapper() });
-    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
+    expect(screen.getByText(t('chat.messages'))).toBeInTheDocument();
   });
 
   it('selects a conversation and shows details panel', async () => {
@@ -192,9 +201,9 @@ describe('Chat', () => {
 
     await user.click(screen.getAllByText('Adriana Hawk')[0]);
 
-    const backButton = screen.getByLabelText(i18n.t('chat.back'));
+    const backButton = screen.getByLabelText(t('chat.back'));
     await user.click(backButton);
 
-    expect(screen.getByText(i18n.t('chat.messages'))).toBeInTheDocument();
+    expect(screen.getByText(t('chat.messages'))).toBeInTheDocument();
   });
 });
